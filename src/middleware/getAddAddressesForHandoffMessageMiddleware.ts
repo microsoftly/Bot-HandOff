@@ -3,7 +3,7 @@ import { Session } from 'botbuilder';
 import { IHandoffMessage } from '../IHandoffMessage';
 
 /**
- * returns middleware that decorates all incoming messages with customer address and, if from an agent, agent address (i.e. transform the 
+ * returns middleware that decorates all incoming messages with customer address and, if from an agent, agent address (i.e. transform the
  * message into an IHandoffMessage)
  * @param isAgent function to determine if a session belongs to an agent
  */

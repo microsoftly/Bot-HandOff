@@ -14,7 +14,7 @@ export class CustomerMessageRouter extends Router {
         this.messageReceivedWhileWaitingHandler = messageReceivedWhileWaitingHandler;
     }
     //tslint:disable
-    public Route(session: Session, next: Function): any {
+    public Route(session: Session, convo: IConversation, next: Function): any {
     //tslint:enable
         const customerAddress = session.message.address;
 

@@ -10,7 +10,7 @@ export class AgentMessageRouter extends Router {
     }
 
     //tslint:disable
-    public Route(session: Session): any {
+    public Route(session: Session, conversation: IConversation): any {
         const agentAddress = session.message.address;
     //tslint:enable
         return this.provider.getConversationFromAgentAddress(agentAddress)

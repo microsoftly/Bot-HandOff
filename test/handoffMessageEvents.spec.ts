@@ -80,19 +80,13 @@ function createEventHandlerSpies(): IEventHandlers {
     };
 }
 
-// function expectConvoIsInWaitAndWatchState(convo: IConversation): void {
-//     expect(convo.agentAddress).to.deep.equal(AGENT_ADDRESS);
-//     expect(convo.customerAddress).to.deep.equal(CUSTOMER_ADDRESS);
-//     expect(convo.conversationState).to.be.equal(ConversationState.WatchAndWait);
+// function expectCallCount(count: number, ...spies: {}[]): void {
+//     spies.forEach((spy: {}) => expect(spy).to.have.been.callCount(count));
 // }
 
-function expectCallCount(count: number, ...spies: {}[]): void {
-    spies.forEach((spy: {}) => expect(spy).to.have.been.callCount(count));
-}
-
-function expectZeroCallsToSpies(...spies: {}[]): void {
-    expectCallCount(0, ...spies);
-}
+// function expectZeroCallsToSpies(...spies: {}[]): void {
+//     expectCallCount(0, ...spies);
+// }
 
 describe('event message', () => {
     let bot: UniversalBot;
@@ -356,7 +350,7 @@ describe('event message', () => {
     //     });
     // });
 
-    describe('conversation state unchanged error is thrown when', () => {
+    xdescribe('conversation state unchanged error is thrown when', () => {
         let expectedErrorEvent: ErrorEventMessage;
 
         it('wait event message is sent to a conversation that is already waiting', () => {

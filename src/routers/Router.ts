@@ -1,4 +1,5 @@
 import { Session, UniversalBot } from 'botbuilder';
+import { IConversation } from '../IConversation';
 import { IProvider } from '../provider/IProvider';
 
 export abstract class Router {
@@ -11,6 +12,6 @@ export abstract class Router {
     }
 
     //tslint:disable
-    public abstract Route(session: Session, next?: Function): any;
+    public abstract Route(session: Session, convo: IConversation, next?: Function): any;
     //tslint:enable
 }

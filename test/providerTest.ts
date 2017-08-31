@@ -1,7 +1,7 @@
 import * as Promise from 'bluebird';
 import { IAddress, IMessage, Message } from 'botbuilder';
 import { expect } from 'chai';
-import { IHandoffMessage } from '../dist/src/IHandoffMessage';
+import { IHandoffMessage } from '../src/IHandoffMessage';
 import { ConversationState, IConversation, ITranscriptLine } from './../src/IConversation';
 import { AgentAlreadyInConversationError } from './../src/provider/errors/AgentAlreadyInConversationError';
 import { ConnectingAgentIsNotWatching } from './../src/provider/errors/AgentConnectingIsNotSameAsWatching';
@@ -278,6 +278,10 @@ export function providerTest(getNewProvider: () => Promise<IProvider>, providerN
 
             // TODO agent already watching error
             it('an agent that attempts to watch that is already watching throws TODO ERROR', () => {
+                expect.fail();
+            });
+
+            it('throws an error if the agent\'s conversation id is alredy occupied', () => {
                 expect.fail();
             });
 

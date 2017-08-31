@@ -77,6 +77,78 @@ describe('agent handoff', () => {
             });
     });
 
+    describe('watching agents', () => {
+        it('each receive a message for every bot message', () => {
+            expect.fail();
+        });
+
+        it('each receive a message for every customer message', () => {
+            expect.fail();
+        });
+
+        it('each receive a message for every agent message, except for the originating agent', () => {
+            expect.fail();
+        });
+
+        it('no longer receive messages when no longer watching', () => {
+            expect.fail();
+        });
+
+        it('do not affect other watching agents when they stop watching', () => {
+            expect.fail();
+        });
+
+        describe('can stop watching a conversation', () => {
+            it('and stop receiving messages from that customer conversation', () => {
+                expect.fail();
+            });
+
+            it('and not affect other agents watching the conversation', () => {
+                expect.fail();
+            });
+
+            it('and not affect other agents watching the conversation', () => {
+                expect.fail();
+            });
+        });
+    });
+
+    describe('connecting agents', () => {
+        it('can connect to a single customer then send and receive messages from the customer', () => {
+            expect.fail();
+        });
+
+        it('can connect to multiple customers then send and receive messages from the customers to the correct addresses', () => {
+            expect.fail();
+        });
+
+        it('cannot connect to a customer that is connected to another agent', () => {
+            expect.fail();
+        });
+
+        describe('can disconnect from a conversation', () => {
+            it('and not receive disconnected customer messages afterwards', () => {
+                expect.fail();
+            });
+
+            it('and not affect other agents watching the conversation', () => {
+                expect.fail();
+            });
+
+            it('and not affect other conversations the agent is connected to', () => {
+                expect.fail();
+            });
+        });
+    });
+
+    it('a single agent can communicate to multuple customers', () => {
+        expect.fail();
+    });
+
+    it('a second agent attempting to connect to a customer that is already connected to an agent throws an error', () => {
+        expect.fail();
+    });
+
     describe('Handoff Options', () => {
         it('will not transcribe if shouldTranscribeMessages option is set to false', () => {
             applyHandoffMiddleware(bot, isAgent, provider, {shouldTranscribeMessages: false});
