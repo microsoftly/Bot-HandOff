@@ -3,6 +3,10 @@ import { IMessage } from 'botbuilder';
 import { IHandoffMessage } from './../IHandoffMessage';
 import { IProvider } from './../provider/IProvider';
 
+/**
+ * returns middleware that transcribes messages from a bot to a transcript
+ * @param provider data provider for transcription services
+ */
 export function getTranscribeBotMessagesMiddleware(provider: IProvider): (s: IMessage, n: Function) => void {
     return (msg: IMessage, next: Function) => {
         const message = msg as IHandoffMessage;

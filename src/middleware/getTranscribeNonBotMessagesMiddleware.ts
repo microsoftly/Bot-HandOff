@@ -3,6 +3,11 @@ import { Session } from 'botbuilder';
 import { IHandoffMessage } from './../IHandoffMessage';
 import { IProvider } from './../provider/IProvider';
 
+/**
+ * returns middleware that transcribes customer and agent messages
+ *
+ * @param provider data provider for transcription services
+ */
 export function getTranscribeNonBotMessagesMiddleware(provider: IProvider): (s: Session, n: Function) => void {
     return (session: Session, next: Function) => {
         const message = session.message as IHandoffMessage;

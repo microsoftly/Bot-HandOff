@@ -60,8 +60,7 @@ export class InMemoryConversationProvider {
 
         // this.agentManager.connectConversationToAgent(customerAddressOrConvoId, agentAddress);
 
-        if ((convo.conversationState === ConversationState.Watch || convo.conversationState === ConversationState.WatchAndWait) &&
-            (convo.agentAddress && convo.agentAddress.conversation.id !== agentConvoId)) {
+        if (convo.agentAddress && convo.agentAddress.conversation.id !== agentConvoId) {
                 // tslint:disable
                 throw new ConnectingAgentIsNotWatching(`agent ${convo.agentAddress.user.name} is attempting to connect to customer ${convo.customerAddress.user.name}, but was not the same agent that was watching`);
                 //tslint:enable
@@ -77,51 +76,43 @@ export class InMemoryConversationProvider {
     public setConversationStateToWait(customerAddress: string | IAddress): IConversation {
         const convo = this.getConversationFromCustomerAddress(customerAddress);
 
-        if (convo.conversationState === ConversationState.Watch) {
-            return this.setConversationStateToWaitAndWatch(customerAddress);
-        }
-
         return this.setConversationState(customerAddress, ConversationState.Wait);
     }
 
     public unsetConversationWait(customerConvo: string): IConversation {
         const conversation = this.getConversationFromCustomerAddress(customerConvo);
 
-        if (conversation.conversationState === ConversationState.WatchAndWait) {
-            return this.setConversationStateToWatch(customerConvo, conversation.agentAddress);
-        }
-
         return this.setConversationStateToBot(customerConvo);
     }
 
-    public setConversationStateToWatch(customerAddress: string | IAddress, agentAddress?: IAddress): IConversation {
-        const convo = this.getConversationFromCustomerAddress(customerAddress);
-        agentAddress = agentAddress || convo.agentAddress;
+    // public setConversationStateToWatch(customerAddress: string | IAddress, agentAddress?: IAddress): IConversation {
+    //     const convo = this.getConversationFromCustomerAddress(customerAddress);
+    //     agentAddress = agentAddress || convo.agentAddress;
 
-        if (convo.conversationState === ConversationState.Wait) {
-            return this.setConversationStateToWaitAndWatch(customerAddress, agentAddress);
-        }
+    //     if (convo.conversationState === ConversationState.Wait) {
+    //         return this.setConversationStateToWaitAndWatch(customerAddress, agentAddress);
+    //     }
 
-        return this.setConversationState(customerAddress, ConversationState.Watch, agentAddress);
-    }
+    //     return this.setConversationState(customerAddress, ConversationState.Watch, agentAddress);
+    // }
 
-    public unsetConversationToWatch(customerAddress: string | IAddress): IConversation {
-        const convo = this.getConversationFromCustomerAddress(customerAddress);
+    // public unsetConversationToWatch(customerAddress: string | IAddress): IConversation {
+    //     const convo = this.getConversationFromCustomerAddress(customerAddress);
 
-        if (convo.conversationState === ConversationState.WatchAndWait) {
-            return this.setConversationStateToWait(customerAddress);
-        }
+    //     if (convo.conversationState === ConversationState.WatchAndWait) {
+    //         return this.setConversationStateToWait(customerAddress);
+    //     }
 
-        return this.setConversationStateToBot(customerAddress);
-    }
+    //     return this.setConversationStateToBot(customerAddress);
+    // }
 
-    private setConversationStateToWaitAndWatch(customerAddressOrConvoId: string | IAddress, agentAddress?: IAddress): IConversation {
-        if (!agentAddress) {
-            agentAddress = this.getConversationFromCustomerAddress(customerAddressOrConvoId).agentAddress;
-        }
+    // private setConversationStateToWaitAndWatch(customerAddressOrConvoId: string | IAddress, agentAddress?: IAddress): IConversation {
+    //     if (!agentAddress) {
+    //         agentAddress = this.getConversationFromCustomerAddress(customerAddressOrConvoId).agentAddress;
+    //     }
 
-        return this.setConversationState(customerAddressOrConvoId, ConversationState.WatchAndWait, agentAddress);
-    }
+    //     return this.setConversationState(customerAddressOrConvoId, ConversationState.WatchAndWait, agentAddress);
+    // }
 
     private setConversationStateToBot(customerAddress: string | IAddress): IConversation {
         const convo = this.getConversationFromCustomerAddress(customerAddress);

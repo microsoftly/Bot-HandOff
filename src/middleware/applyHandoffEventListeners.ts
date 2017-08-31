@@ -7,8 +7,15 @@ import { EventFailureHandler } from '../options/EventFailureHandlers';
 import { IEventHandler, IEventHandlers } from '../options/IEventHandlers';
 import { IProvider } from '../provider/IProvider';
 import { ErrorEventMessage } from './../eventMessages/ErrorEventMessage';
-// import { EventSuccessHandler, EventSuccessHandlers } from './../EventSuccessHandlers';
 
+/**
+ * adds 6 event listeners, 1 for each event message type. Any incoming messages will go through this middleware before any other. If there
+ * is a match, the message is **NOT** propagated futher down the middleware chain
+ *
+ * @param bot bot that the middleware is being provided to
+ * @param provider implementation of data provider layer
+ * @param eventHandlers success and failure handlers for each EventMessage type
+ */
 export function applyHandoffEventListeners(bot: UniversalBot, provider: IProvider, eventHandlers: IEventHandlers): void {
     return new HandoffMessageEventListnerApplicator(bot, provider, eventHandlers).applyHandoffEventListeners();
 }
