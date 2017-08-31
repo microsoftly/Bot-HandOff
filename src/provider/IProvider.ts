@@ -46,6 +46,14 @@ export interface IProvider {
      * @param agentAddress address of agent being connected
      */
     connectCustomerToAgent(customerAddress: IAddress, agentAddress: IAddress): Promise<IConversation>;
+
+    /**
+     * sets customer conversation state to Bot. Sets agentAddress for conversation to agentAddress. Adds agent address to watching agent
+     * list, if not already present
+     *
+     * @param customerAddress address of customer being disconnected
+     * @param agentAddress address of agent being disconnected
+     */
     disconnectCustomerFromAgent(customerAddress: IAddress, agentAddress: IAddress): Promise<IConversation>;
 
     queueCustomerForAgent(customerAddress: IAddress): Promise<IConversation>;

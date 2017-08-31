@@ -59,11 +59,12 @@ export class InMemoryConversationProvider {
         const agentConvoId = agentAddress.conversation.id;
 
         // this.agentManager.connectConversationToAgent(customerAddressOrConvoId, agentAddress);
+        this.agentManager.addWatchingAgent(customerAddressOrConvoId, agentAddress);
 
         if (convo.agentAddress && convo.agentAddress.conversation.id !== agentConvoId) {
-                // tslint:disable
-                throw new ConnectingAgentIsNotWatching(`agent ${convo.agentAddress.user.name} is attempting to connect to customer ${convo.customerAddress.user.name}, but was not the same agent that was watching`);
-                //tslint:enable
+            // tslint:disable
+            throw new ConnectingAgentIsNotWatching(`agent ${convo.agentAddress.user.name} is attempting to connect to customer ${convo.customerAddress.user.name}, but was not the same agent that was watching`);
+            //tslint:enable
         }
 
         return this.setConversationState(customerAddressOrConvoId, ConversationState.Agent, agentAddress);
@@ -83,6 +84,18 @@ export class InMemoryConversationProvider {
         const conversation = this.getConversationFromCustomerAddress(customerConvo);
 
         return this.setConversationStateToBot(customerConvo);
+    }
+
+    public addWatchingAgent(customerAddress: IAddress, agentAddress: IAddress): IConversation {
+        this.agentManager.addWatchingAgent(customerAddress, agentAddress);
+
+        return this.getConversationFromCustomerAddress(customerAddress);
+    }
+
+    public removeWatchingAgent(customerAddress: IAddress, agentAddress: IAddress): IConversation {
+        this.agentManager.removeWatchingAgent(customerAddress, agentAddress);
+
+        return this.getConversationFromCustomerAddress(customerAddress);
     }
 
     // public setConversationStateToWatch(customerAddress: string | IAddress, agentAddress?: IAddress): IConversation {

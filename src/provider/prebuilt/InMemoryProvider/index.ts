@@ -85,7 +85,7 @@ export class InMemoryProvider implements IProvider {
 
         const agentAddress = message.agentAddress;
 
-        const customerAddress = this.agentConvoToCustomerAddressProvider.getCustomerAddress(agentAddress);
+        const customerAddress = message.customerAddress;
 
         if (!customerAddress) {
             const rejectionMessage = `no customer conversation found for agent with conversation id ${agentAddress.conversation.id}`;
@@ -139,7 +139,7 @@ export class InMemoryProvider implements IProvider {
         this.conversationProvider.unsetConversationStateToAgent(customerAddress);
 
         try {
-            return Promise.resolve(this.getConversationFromCustomerAddress(customerAddress));
+            return Promise.resolve(this.unwatchConversation(customerAddress, agentAddress));
         } catch (e) {
             return Promise.reject(e);
         }
@@ -169,7 +169,7 @@ export class InMemoryProvider implements IProvider {
         this.agentConvoToCustomerAddressProvider.linkCustomerAddressToAgentConvoId(agentAddress.conversation.id, customerAddress);
 
         try {
-            return Promise.resolve(this.conversationProvider.setConversationStateToWatch(customerAddress, agentAddress));
+            return Promise.resolve(this.conversationProvider.addWatchingAgent(customerAddress, agentAddress));
         } catch (e) {
             return Promise.reject(e);
         }
@@ -179,7 +179,7 @@ export class InMemoryProvider implements IProvider {
         this.agentConvoToCustomerAddressProvider.removeAgentConvoId(agentAddress.conversation.id);
 
         try {
-            return Promise.resolve(this.conversationProvider.unsetConversationToWatch(customerAddress));
+            return Promise.resolve(this.conversationProvider.removeWatchingAgent(customerAddress, agentAddress));
         } catch (e) {
             return Promise.reject(e);
         }

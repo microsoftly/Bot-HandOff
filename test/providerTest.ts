@@ -1,8 +1,8 @@
 import * as Promise from 'bluebird';
-import { IAddress, Message } from 'botbuilder';
+import { IAddress, IMessage, Message } from 'botbuilder';
 import { expect } from 'chai';
+import { IHandoffMessage } from '../dist/src/IHandoffMessage';
 import { ConversationState, IConversation, ITranscriptLine } from './../src/IConversation';
-import { addAgentAddressToMessage, addCustomerAddressToMessage } from './../src/IHandoffMessage';
 import { AgentAlreadyInConversationError } from './../src/provider/errors/AgentAlreadyInConversationError';
 import { ConnectingAgentIsNotWatching } from './../src/provider/errors/AgentConnectingIsNotSameAsWatching';
 import { AgentNotInConversationError } from './../src/provider/errors/AgentNotInConversationError';
@@ -11,79 +11,150 @@ import {
 } from './../src/provider/errors/BotAttemptedToRecordMessageWhileAgentHasConnection';
 import { IProvider } from './../src/provider/IProvider';
 
-const ADDRESS_1: IAddress = { channelId: 'console',
+const CUSTOMER_1_ADDRESS: IAddress = { channelId: 'console',
     user: { id: 'userId1', name: 'user1' },
     bot: { id: 'bot', name: 'Bot' },
     conversation: { id: 'user1Conversation' }
 };
 
-const ADDRESS_2: IAddress = { channelId: 'console',
+const CUSTOMER_2_ADDRESS: IAddress = { channelId: 'console',
     user: { id: 'userId2', name: 'user2' },
     bot: { id: 'bot', name: 'Bot' },
     conversation: { id: 'user2Conversation' }
 };
 
-const ADDRESS_3: IAddress = { channelId: 'console',
-    user: { id: 'userId3', name: 'user3' },
+const AGENT_1_ADDRESS: IAddress = { channelId: 'console',
+    user: { id: 'agent1Id', name: 'agent1' },
     bot: { id: 'bot', name: 'Bot' },
-    conversation: { id: 'user3Conversation' }
+    conversation: { id: 'agent1Convo' }
 };
 
-export function providerTest(getNewProvider: () => Promise<IProvider>, providerName: string): void {
-    const customer1Address = ADDRESS_1;
-    const customer2Address = ADDRESS_2;
-    const agent1Address1 = ADDRESS_3;
+const AGENT_2_ADDRESS: IAddress = { channelId: 'console',
+    user: { id: 'agent2Id', name: 'agent2' },
+    bot: { id: 'bot', name: 'Bot' },
+    conversation: { id: 'agent2Convo' }
+};
 
-    // agent1Adress1 and agent2Address 2 both belong to user agent1, however they have different conversation ids
-    const agent1Address2 = Object.assign({}, agent1Address1, {conversation: { id: `${agent1Address1.conversation.id}2`}});
+function addCustomerAddressToMessage(msg: IMessage, customerAddress: IAddress): void {
+    (msg as IHandoffMessage).customerAddress = customerAddress;
+}
+
+function addAgentAddressToMessage(msg: IMessage, agentAddress: IAddress): void {
+    (msg as IHandoffMessage).agentAddress = agentAddress;
+}
+
+export function providerTest(getNewProvider: () => Promise<IProvider>, providerName: string): void {
+    const customer1IntroMessage = new Message()
+        .address(CUSTOMER_1_ADDRESS)
+        .text('first message from customer 1')
+        .toMessage();
+
+    const customer2IntroMessage = new Message()
+        .address(CUSTOMER_2_ADDRESS)
+        .text('first message from customer 2')
+        .toMessage();
+
+    addCustomerAddressToMessage(customer1IntroMessage, CUSTOMER_1_ADDRESS);
+    addCustomerAddressToMessage(customer2IntroMessage, CUSTOMER_2_ADDRESS);
 
     let provider: IProvider;
 
     describe(providerName, () => {
+        let convo: IConversation;
+        let customer1Convo: IConversation;
+        let customer2Convo: IConversation;
+
         beforeEach(() => {
             return getNewProvider()
-                .then((newProvider: IProvider) => {
-                    provider = newProvider;
+                .then((newProvider: IProvider) => provider = newProvider)
+                .then(() => Promise.all([
+                    provider.addCustomerMessageToTranscript(customer1IntroMessage),
+                    provider.addCustomerMessageToTranscript(customer2IntroMessage)
+                ]))
+                .spread((customer1ConvoOut: IConversation, customer2ConvoOut: IConversation) => {
+                    customer1Convo = customer1ConvoOut;
+                    customer2Convo = customer2ConvoOut;
                 });
         });
 
         describe('customer messages', () => {
+            const customer1SecondMessage = new Message()
+                .address(CUSTOMER_1_ADDRESS)
+                .text('second message from customer 1')
+                .toMessage();
+
+            const customer2SecondMessage = new Message()
+                .address(CUSTOMER_2_ADDRESS)
+                .text('second message from customer 2')
+                .toMessage();
+
+            addCustomerAddressToMessage(customer1SecondMessage, CUSTOMER_1_ADDRESS);
+            addCustomerAddressToMessage(customer2SecondMessage, CUSTOMER_2_ADDRESS);
+
+            beforeEach(() => {
+                return Promise.all([
+                        provider.addCustomerMessageToTranscript(customer1SecondMessage),
+                        provider.addCustomerMessageToTranscript(customer2SecondMessage)
+                    ])
+                    .spread((customer1ConvoOut: IConversation, customer2ConvoOut: IConversation) => {
+                        customer1Convo = customer1ConvoOut;
+                        customer2Convo = customer2ConvoOut;
+                    });
+            });
+
+            it('can be uniquely retrieved for separate customers', () => {
+                expect(customer1Convo.transcript.length).to.eq(2);
+                expect(customer1Convo.transcript[0].text).to.eq(customer1IntroMessage.text);
+                expect(customer1Convo.transcript[1].text).to.eq(customer1SecondMessage.text);
+
+                expect(customer2Convo.transcript.length).to.eq(2);
+                expect(customer2Convo.transcript[0].text).to.eq(customer2IntroMessage.text);
+                expect(customer2Convo.transcript[1].text).to.eq(customer2SecondMessage.text);
+            });
+
+            it('saves the customer address to the conversation', () => {
+                expect(customer1Convo.customerAddress).to.deep.eq(CUSTOMER_1_ADDRESS);
+                expect(customer2Convo.customerAddress).to.deep.eq(CUSTOMER_2_ADDRESS);
+            });
+        });
+
+        xdescribe('customer messages', () => {
             const message1Address1 = new Message()
-                .address(ADDRESS_1)
+                .address(CUSTOMER_1_ADDRESS)
                 .text('first message')
                 .toMessage();
 
             const message2Address1 = new Message()
-                .address(ADDRESS_1)
+                .address(CUSTOMER_1_ADDRESS)
                 .text('second message')
                 .toMessage();
 
             const message3Address1 = new Message()
-                .address(ADDRESS_1)
+                .address(CUSTOMER_1_ADDRESS)
                 .text('third message')
                 .toMessage();
 
             const message1Address2 = new Message()
-                .address(ADDRESS_2)
+                .address(CUSTOMER_2_ADDRESS)
                 .text('first message')
                 .toMessage();
 
             const message2Address2 = new Message()
-                .address(ADDRESS_2)
+                .address(CUSTOMER_2_ADDRESS)
                 .text('second message')
                 .toMessage();
 
             const message3Address2 = new Message()
-                .address(ADDRESS_2)
+                .address(CUSTOMER_2_ADDRESS)
                 .text('third message')
                 .toMessage();
 
-            addCustomerAddressToMessage(message1Address1, ADDRESS_1);
-            addCustomerAddressToMessage(message2Address1, ADDRESS_1);
-            addCustomerAddressToMessage(message3Address1, ADDRESS_1);
-            addCustomerAddressToMessage(message1Address2, ADDRESS_2);
-            addCustomerAddressToMessage(message2Address2, ADDRESS_2);
-            addCustomerAddressToMessage(message3Address2, ADDRESS_2);
+            addCustomerAddressToMessage(message1Address1, CUSTOMER_1_ADDRESS);
+            addCustomerAddressToMessage(message2Address1, CUSTOMER_1_ADDRESS);
+            addCustomerAddressToMessage(message3Address1, CUSTOMER_1_ADDRESS);
+            addCustomerAddressToMessage(message1Address2, CUSTOMER_2_ADDRESS);
+            addCustomerAddressToMessage(message2Address2, CUSTOMER_2_ADDRESS);
+            addCustomerAddressToMessage(message3Address2, CUSTOMER_2_ADDRESS);
 
             beforeEach(() => {
                 return Promise.join(
@@ -110,139 +181,291 @@ export function providerTest(getNewProvider: () => Promise<IProvider>, providerN
             };
 
             it('can be retrieved in a conversation form', () => {
-                return provider.getConversationFromCustomerAddress(ADDRESS_1)
-                    .then((convo: IConversation) => verifyConversationForAddress(convo, ADDRESS_1));
+                return provider.getConversationFromCustomerAddress(CUSTOMER_1_ADDRESS)
+                    .then((convo: IConversation) => verifyConversationForAddress(convo, CUSTOMER_1_ADDRESS));
             });
 
             it('can be uniquely retrieved for separate customers', () => {
                 return Promise.join(
-                    provider.getConversationFromCustomerAddress(ADDRESS_1),
-                    provider.getConversationFromCustomerAddress(ADDRESS_2)
+                    provider.getConversationFromCustomerAddress(CUSTOMER_1_ADDRESS),
+                    provider.getConversationFromCustomerAddress(CUSTOMER_2_ADDRESS)
                 )
                     .spread((convo1: IConversation, convo2: IConversation) => {
-                        verifyConversationForAddress(convo1, ADDRESS_1);
-                        verifyConversationForAddress(convo2, ADDRESS_2);
+                        verifyConversationForAddress(convo1, CUSTOMER_1_ADDRESS);
+                        verifyConversationForAddress(convo2, CUSTOMER_2_ADDRESS);
                     });
             });
         });
 
-        describe('customer queue for agent', () => {
-            const message = new Message()
-                .address(customer1Address)
-                .text('message')
-                .toMessage();
-
-            addCustomerAddressToMessage(message, customer1Address);
-
+        describe('queue/dequeue', () => {
             beforeEach(() => {
-                return provider.addCustomerMessageToTranscript(message)
-                    .then(() => provider.queueCustomerForAgent(customer1Address));
+                return provider.queueCustomerForAgent(CUSTOMER_1_ADDRESS)
+                    .then((convoOut: IConversation) => convo = convoOut);
             });
 
-            it('updates conversation state to be wait', () => {
-                return provider.getConversationFromCustomerAddress(customer1Address)
-                    .then((conversation: IConversation) => {
-                        expect(conversation.agentAddress).to.be.undefined;
-                        expect(conversation.conversationState).to.be.equal(ConversationState.Wait);
-                        expect(conversation.transcript.length).to.be.equal(1);
+            it('queue sets conversation state to wait', () => {
+                expect(convo.conversationState).to.eq(ConversationState.Wait);
+            });
+
+            // more testing may be needed around this
+            it('queue does not affect agentAddress', () => {
+                expect(convo.agentAddress).to.be.undefined;
+            });
+
+            // assumes watch works
+            it('watch and unwatch does not affect wait conversation state', () => {
+                return provider.watchConversation(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS)
+                    .then((watchedConvo: IConversation) => {
+                        expect(watchedConvo.conversationState).to.eq(ConversationState.Wait);
+                    })
+                    .then(() => provider.unwatchConversation(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS))
+                    .then((unwatchedConvo: IConversation) => {
+                        expect(unwatchedConvo.conversationState).to.eq(ConversationState.Wait);
                     });
             });
 
-            it('allows bot messages to be recorded withbout affecting state', () => {
-                const msg = Object.assign({}, message, { text: 'bot message' });
+            describe('dequeue', () => {
+                beforeEach(() => {
+                    return provider.dequeueCustomerForAgent(CUSTOMER_1_ADDRESS)
+                        .then((convoOut: IConversation) => convo = convoOut);
+                });
 
-                return provider.addBotMessageToTranscript(msg)
-                    .then(() => provider.getConversationFromCustomerAddress(customer1Address))
-                    .then((convo: IConversation) => {
-                        expect(convo.agentAddress).to.be.undefined;
-                        expect(convo.conversationState).to.be.equal(ConversationState.Wait);
-                        expect(convo.transcript.length).to.be.equal(2);
-                        expect(convo.transcript[1].text).to.be.equal('bot message');
-                        expect(convo.transcript[1].from).to.be.undefined;
-                    });
-            });
+                it('returns the state to bot', () => {
+                    expect(convo.conversationState).to.eq(ConversationState.Bot);
+                });
 
-            it('sets conversation state to wait and watch if agent watches conversation', () => {
-                return provider.connectCustomerToAgent(customer1Address, agent1Address1)
-                    .then(() => provider.getConversationFromCustomerAddress(customer1Address))
-                    .then((convo: IConversation) => expect(convo.conversationState === ConversationState.WatchAndWait));
+                // more testing may be needed around this
+                it('does not affect agentAddress', () => {
+                    expect(convo.agentAddress).to.be.undefined;
+                });
             });
         });
 
-        describe('conversation is in wait and watch state', () => {
-            const customerMessage = new Message()
-                .address(customer1Address)
-                .text('customer 1')
+        describe('watch/unwatch', () => {
+            beforeEach(() => {
+                return provider.watchConversation(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS)
+                    .then((convoOut: IConversation) => convo = convoOut);
+            });
+
+            it('watch does not affect conversation state', () => {
+                expect(convo.conversationState).to.eq(ConversationState.Bot);
+            });
+
+            it('watch adds the agent address to the watching agents collection', () => {
+                expect(convo.watchingAgents).to.include(AGENT_1_ADDRESS);
+            });
+
+            it('multiple agents can watch a single conversation', () => {
+                return provider.watchConversation(CUSTOMER_1_ADDRESS, AGENT_2_ADDRESS)
+                    .then((convoOut: IConversation) => convo = convoOut)
+                    .then(() => {
+                        expect(convo.watchingAgents.length).to.eq(2);
+                        expect(convo.watchingAgents).to.include(AGENT_1_ADDRESS);
+                        expect(convo.watchingAgents).to.include(AGENT_2_ADDRESS);
+                    });
+            });
+
+            it('multiple agents can watch multiple conversations', () => {
+                return provider.watchConversation(CUSTOMER_2_ADDRESS, AGENT_2_ADDRESS)
+                    .then((convo2: IConversation) => {
+                        expect(convo.watchingAgents.length).to.eq(1);
+                        expect(convo.watchingAgents).to.include(AGENT_1_ADDRESS);
+
+                        expect(convo2.watchingAgents.length).to.eq(1);
+                        expect(convo2.watchingAgents).to.include(AGENT_2_ADDRESS);
+                    });
+            });
+
+            // TODO agent already watching error
+            it('an agent that attempts to watch that is already watching throws TODO ERROR', () => {
+                expect.fail();
+            });
+
+            describe('unwatch', () => {
+                beforeEach(() => {
+                    return provider.unwatchConversation(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS)
+                        .then((convoOut: IConversation) => convo = convoOut);
+                });
+
+                it('removes the agent from the watching agents collection', () => {
+                    expect(convo.watchingAgents).not.to.include(AGENT_1_ADDRESS);
+                });
+
+                it('does not affect other agents in watch list', () => {
+                    return provider.watchConversation(CUSTOMER_1_ADDRESS, AGENT_2_ADDRESS)
+                        .then(() => provider.unwatchConversation(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS))
+                        .then((convoOut: IConversation) => convo = convoOut)
+                        .then(() => {
+                            expect(convo.watchingAgents.length).to.eq(1);
+                            expect(convo.watchingAgents).to.include(AGENT_2_ADDRESS);
+                        });
+                });
+
+                it('does not affect other conversations with other customers', () => {
+                    return provider.watchConversation(CUSTOMER_2_ADDRESS, AGENT_2_ADDRESS)
+                        .then((convoOut: IConversation) => convo = convoOut)
+                        .then(() => provider.unwatchConversation(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS))
+                        .then(() => {
+                            expect(convo.watchingAgents.length).to.eq(1);
+                        });
+                });
+            });
+        });
+
+        describe.only('connect/disconnect', () => {
+            const agentMessage = new Message()
+                .text('agent message')
+                .address(AGENT_1_ADDRESS)
                 .toMessage();
 
-            addCustomerAddressToMessage(customerMessage, customer1Address);
+            addAgentAddressToMessage(agentMessage, AGENT_1_ADDRESS);
+            addCustomerAddressToMessage(agentMessage, CUSTOMER_1_ADDRESS);
 
             beforeEach(() => {
-                return provider.addCustomerMessageToTranscript(customerMessage)
-                    .then(() => Promise.join(
-                        // js maintains thread safety, this is fine
-                        provider.queueCustomerForAgent(customer1Address),
-                        provider.watchConversation(customer1Address, agent1Address1)
-                    )).then(() => provider.getConversationFromCustomerAddress(customer1Address))
-                    .then((convo: IConversation) => expect(convo.conversationState).to.be.equal(ConversationState.WatchAndWait));
+                return provider.connectCustomerToAgent(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS)
+                    .then((convoOut: IConversation) => convo = convoOut);
             });
 
-            // note, it is not possible to go directly from a wait and watch state to bot state. States need to be decomposed.
-            // Bot is the default
-
-            it('can be set to an only wait state', () => {
-                return provider.unwatchConversation(customer1Address, agent1Address1)
-                    .then(() => provider.getConversationFromCustomerAddress(customer1Address))
-                    .then((convo: IConversation) => expect(convo.conversationState).to.be.equal(ConversationState.Wait));
+            it('sets conversation state to agent', () => {
+                expect(convo.conversationState).to.eq(ConversationState.Agent);
             });
 
-            it('can be set to an only watch state', () => {
-                return provider.dequeueCustomerForAgent(customer1Address)
-                    .then(() => provider.getConversationFromCustomerAddress(customer1Address))
-                    .then((convo: IConversation) => expect(convo.conversationState).to.be.equal(ConversationState.Watch));
+            it('adds the agent address to the watching agent list', () => {
+                expect(convo.watchingAgents).to.include(AGENT_1_ADDRESS);
             });
 
-            it('can connect to agent', () => {
-                return provider.connectCustomerToAgent(customer1Address, agent1Address1)
-                    .then(() => provider.getConversationFromCustomerAddress(customer1Address))
-                    .then((convo: IConversation) => expect(convo.conversationState).to.be.equal(ConversationState.Agent));
+            it('sets agentAddress on conversation', () => {
+                expect(convo.agentAddress).to.eq(AGENT_1_ADDRESS);
             });
 
-            it('is connected to agent implicitly if an agent sends a message to the user', () => {
-                const agentMessage = new Message()
-                    .address(agent1Address1)
-                    .text('agent')
-                    .toMessage();
-
-                addAgentAddressToMessage(agentMessage, agent1Address1);
-
+            it('receives messages from agent after connection is established', () => {
                 return provider.addAgentMessageToTranscript(agentMessage)
-                    .then(() => provider.getConversationFromCustomerAddress(customer1Address))
-                    .then((convo: IConversation) => expect(convo.conversationState).to.be.equal(ConversationState.Agent));
+                    .then(() => provider.getConversationFromAgentAddress(AGENT_1_ADDRESS))
+                    .then((convoOut: IConversation) => convo = convoOut)
+                    .then(() => {
+                        expect(convo.transcript.length).to.eq(2);
+                    });
+            });
+
+            // TODO
+            it('throws an error if a bot message is recorded while agent-customer connection is established', () => {
+                expect.fail();
+            });
+
+            it('if agent is watching and transcription occurs, conversation state is implicitly set to Agent', () => {
+                return provider.disconnectCustomerFromAgent(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS)
+                    .then(() => provider.watchConversation(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS))
+                    .then(() => provider.addAgentMessageToTranscript(agentMessage))
+                    .then((convoOut: IConversation) => convo = convoOut)
+                    .then(() => {
+                        expect(convo.conversationState).to.eq(ConversationState.Agent);
+                    });
+            });
+
+            describe('disconnect', () => {
+                beforeEach(() => {
+                    return provider.disconnectCustomerFromAgent(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS)
+                        .then((convoOut: IConversation) => convo = convoOut);
+                });
+
+                it('sets conversation state to bot', () => {
+                    expect(convo.conversationState).to.eq(ConversationState.Bot);
+                });
+
+                it('unsets agentAddress', () => {
+                    expect(convo.agentAddress).to.be.undefined;
+                });
+
+                it('removes agent from watching agent collection', () => {
+                    expect(convo.watchingAgents.length).to.eq(0);
+                });
+
+                // TODO agent not connected error (disconnect)
+                it('throws not connected error if the agent not connected and agent transcription attempt occurs', () => {
+                    expect.fail();
+                });
+
+                it('does not affect other watching agents', () => {
+                    return provider.connectCustomerToAgent(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS)
+                        .then(() => provider.watchConversation(CUSTOMER_1_ADDRESS, AGENT_2_ADDRESS))
+                        .then((convoOut: IConversation) => convo = convoOut)
+                        .then(() => {
+                            expect(convo.agentAddress).to.deep.eq(AGENT_1_ADDRESS);
+                            expect(convo.conversationState).to.eq(ConversationState.Agent);
+                            expect(convo.watchingAgents.length).to.eq(2);
+                            expect(convo.watchingAgents).to.deep.include(AGENT_1_ADDRESS);
+                            expect(convo.watchingAgents).to.deep.include(AGENT_2_ADDRESS);
+                        })
+                        .then(() => provider.disconnectCustomerFromAgent(CUSTOMER_1_ADDRESS, AGENT_2_ADDRESS))
+                        .then((convoOut: IConversation) => convo = convoOut)
+                        .then(() => {
+                            expect(convo.agentAddress).not.to.deep.eq(AGENT_1_ADDRESS);
+                            expect(convo.conversationState).to.eq(ConversationState.Bot);
+                            expect(convo.watchingAgents.length).to.eq(1);
+                            expect(convo.watchingAgents).to.deep.include(AGENT_1_ADDRESS);
+                        });
+                });
             });
         });
+
+        // xdescribe('customer queue for agent', () => {
+        //     const message = new Message()
+        //         .address(CUSTOMER_1_ADDRESS)
+        //         .text('message')
+        //         .toMessage();
+
+        //     addCustomerAddressToMessage(message, CUSTOMER_1_ADDRESS);
+
+        //     beforeEach(() => {
+        //         return provider.addCustomerMessageToTranscript(message)
+        //             .then(() => provider.queueCustomerForAgent(CUSTOMER_1_ADDRESS));
+        //     });
+
+        //     it('updates conversation state to be wait', () => {
+        //         return provider.getConversationFromCustomerAddress(CUSTOMER_1_ADDRESS)
+        //             .then((conversation: IConversation) => {
+        //                 expect(conversation.agentAddress).to.be.undefined;
+        //                 expect(conversation.conversationState).to.be.equal(ConversationState.Wait);
+        //                 expect(conversation.transcript.length).to.be.equal(1);
+        //             });
+        //     });
+
+        //     it('allows bot messages to be recorded withbout affecting state', () => {
+        //         const msg = Object.assign({}, message, { text: 'bot message' });
+
+        //         return provider.addBotMessageToTranscript(msg)
+        //             .then(() => provider.getConversationFromCustomerAddress(CUSTOMER_1_ADDRESS))
+        //             .then((convo: IConversation) => {
+        //                 expect(convo.agentAddress).to.be.undefined;
+        //                 expect(convo.conversationState).to.be.equal(ConversationState.Wait);
+        //                 expect(convo.transcript.length).to.be.equal(2);
+        //                 expect(convo.transcript[1].text).to.be.equal('bot message');
+        //                 expect(convo.transcript[1].from).to.be.undefined;
+        //             });
+        //     });
+        // });
 
         describe('customer connecting to agent', () => {
             const customer1Message = new Message()
-                .address(customer1Address)
+                .address(CUSTOMER_1_ADDRESS)
                 .text('message')
                 .toMessage();
 
             const agentMessage = new Message()
-                .address(agent1Address1)
+                .address(AGENT_1_ADDRESS)
                 .text('agent message')
                 .toMessage();
 
-            addCustomerAddressToMessage(customer1Message, customer1Address);
-            addAgentAddressToMessage(agentMessage, agent1Address1);
+            addCustomerAddressToMessage(customer1Message, CUSTOMER_1_ADDRESS);
+            addAgentAddressToMessage(agentMessage, AGENT_1_ADDRESS);
 
             beforeEach(() => {
                 return provider.addCustomerMessageToTranscript(customer1Message)
-                    .then(() =>  provider.connectCustomerToAgent(customer1Address, agent1Address1));
+                    .then(() =>  provider.connectCustomerToAgent(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS));
             });
 
             it('updates the customer conversation state to "Agent"', () => {
-                return provider.getConversationFromCustomerAddress(customer1Address)
+                return provider.getConversationFromCustomerAddress(CUSTOMER_1_ADDRESS)
                     .then((convo: IConversation) => expect(convo.conversationState).to.be.equal(ConversationState.Agent));
             });
 
@@ -250,8 +473,8 @@ export function providerTest(getNewProvider: () => Promise<IProvider>, providerN
                 return provider.addAgentMessageToTranscript(agentMessage)
                     .then((convo: IConversation) => {
                         expect(convo.transcript.length).to.be.equal(2);
-                        expect(convo.transcript[0].from).to.be.equal(customer1Address);
-                        expect(convo.transcript[1].from).to.be.equal(agent1Address1);
+                        expect(convo.transcript[0].from).to.be.equal(CUSTOMER_1_ADDRESS);
+                        expect(convo.transcript[1].from).to.be.equal(AGENT_1_ADDRESS);
                         expect(convo.transcript[1].text).to.be.equal('agent message');
                     });
             });
@@ -263,23 +486,23 @@ export function providerTest(getNewProvider: () => Promise<IProvider>, providerN
                     .catch(BotAttemptedToRecordMessageWhileAgentHasConnection, (e: BotAttemptedToRecordMessageWhileAgentHasConnection) => {
                         expect(e).to.be.an.instanceOf(BotAttemptedToRecordMessageWhileAgentHasConnection);
                         expect(e.message)
-                            .to.be.equal(new BotAttemptedToRecordMessageWhileAgentHasConnection(customer1Address.conversation.id).message);
+                            .to.be.equal(new BotAttemptedToRecordMessageWhileAgentHasConnection(CUSTOMER_1_ADDRESS.conversation.id).message);
                     });
             });
 
             it('throws an error if the agent\'s conversation id is alredy occupied', () => {
                 const expectedErrorMessage
-                    = `agent ${agent1Address1.user.name} with conversation id ${agent1Address1.conversation.id} is already occupied`;
+                    = `agent ${AGENT_1_ADDRESS.user.name} with conversation id ${AGENT_1_ADDRESS.conversation.id} is already occupied`;
 
                 const customer2Message = new Message()
-                    .address(customer2Address)
+                    .address(CUSTOMER_2_ADDRESS)
                     .text('customer 2 message')
                     .toMessage();
 
-                addCustomerAddressToMessage(customer2Message, customer2Address);
+                addCustomerAddressToMessage(customer2Message, CUSTOMER_2_ADDRESS);
 
                 return provider.addCustomerMessageToTranscript(customer2Message)
-                    .then(() => provider.connectCustomerToAgent(customer2Address, agent1Address1))
+                    .then(() => provider.connectCustomerToAgent(CUSTOMER_2_ADDRESS, AGENT_1_ADDRESS))
                     .then(() => expect.fail('didn\'t throw error when attempting to connect on an agent conversation id that is occupied'))
                     .catch(AgentAlreadyInConversationError, (e: AgentAlreadyInConversationError) => {
                         expect(e).to.be.an.instanceOf(AgentAlreadyInConversationError);
@@ -290,29 +513,29 @@ export function providerTest(getNewProvider: () => Promise<IProvider>, providerN
         describe('agent messages', () => {
             it('are recorded to the customer transcript', () => {
                 const customer1Message = new Message()
-                    .address(customer1Address)
+                    .address(CUSTOMER_1_ADDRESS)
                     .text('customer 1')
                     .toMessage();
 
                 const customer2Message = new Message()
-                    .address(customer2Address)
+                    .address(CUSTOMER_2_ADDRESS)
                     .text('customer 2')
                     .toMessage();
 
                 const agentMessageConvo1 = new Message()
-                    .address(agent1Address1)
+                    .address(AGENT_1_ADDRESS)
                     .text('agent 1')
                     .toMessage();
 
                 const agentMessageConvo2 = new Message()
-                    .address(agent1Address2)
+                    .address(AGENT_2_ADDRESS)
                     .text('agent 2')
                     .toMessage();
 
-                addCustomerAddressToMessage(customer1Message, customer1Address);
-                addCustomerAddressToMessage(customer2Message, customer2Address);
-                addAgentAddressToMessage(agentMessageConvo1, agent1Address1);
-                addAgentAddressToMessage(agentMessageConvo2, agent1Address2);
+                addCustomerAddressToMessage(customer1Message, CUSTOMER_1_ADDRESS);
+                addCustomerAddressToMessage(customer2Message, CUSTOMER_2_ADDRESS);
+                addAgentAddressToMessage(agentMessageConvo1, AGENT_1_ADDRESS);
+                addAgentAddressToMessage(agentMessageConvo2, AGENT_2_ADDRESS);
 
                 const expectConversationBetweenAgentAndCustomer
                     = (convo: IConversation, customerAddress: IAddress, agentAddress: IAddress, idCounter: number) => {
@@ -332,27 +555,27 @@ export function providerTest(getNewProvider: () => Promise<IProvider>, providerN
                         provider.addCustomerMessageToTranscript(customer1Message),
                         provider.addCustomerMessageToTranscript(customer2Message))
                     .then(() => Promise.join(
-                        provider.connectCustomerToAgent(customer1Address, agent1Address1),
-                        provider.connectCustomerToAgent(customer2Address, agent1Address2)))
+                        provider.connectCustomerToAgent(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS),
+                        provider.connectCustomerToAgent(CUSTOMER_2_ADDRESS, AGENT_2_ADDRESS)))
                     .then(() => Promise.join(
                         provider.addAgentMessageToTranscript(agentMessageConvo1),
                         provider.addAgentMessageToTranscript(agentMessageConvo2)))
                     .then(() => Promise.join(
-                        provider.getConversationFromCustomerAddress(customer1Address),
-                        provider.getConversationFromCustomerAddress(customer2Address)))
+                        provider.getConversationFromCustomerAddress(CUSTOMER_1_ADDRESS),
+                        provider.getConversationFromCustomerAddress(CUSTOMER_2_ADDRESS)))
                     .spread((convo1: IConversation, convo2: IConversation) => {
-                        expectConversationBetweenAgentAndCustomer(convo1, customer1Address, agent1Address1, 1);
-                        expectConversationBetweenAgentAndCustomer(convo2, customer2Address, agent1Address2, 2);
+                        expectConversationBetweenAgentAndCustomer(convo1, CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS, 1);
+                        expectConversationBetweenAgentAndCustomer(convo2, CUSTOMER_2_ADDRESS, AGENT_2_ADDRESS, 2);
                     });
             });
 
             it('that are sent to customer conversations that do not have a connection get an error', () => {
                 const agentMessage = new Message()
-                    .address(agent1Address1)
+                    .address(AGENT_1_ADDRESS)
                     .text('This is an agent, how can I help?')
                     .toMessage();
 
-                addAgentAddressToMessage(agentMessage, agent1Address1);
+                addAgentAddressToMessage(agentMessage, AGENT_1_ADDRESS);
 
                 return provider.addAgentMessageToTranscript(agentMessage)
                     .then(() => expect.fail('did not throw an error as expected'))
@@ -362,40 +585,33 @@ export function providerTest(getNewProvider: () => Promise<IProvider>, providerN
 
         describe('agents watching conversation', () => {
             const customerMessage = new Message()
-                .address(customer1Address)
+                .address(CUSTOMER_1_ADDRESS)
                 .text('customer message')
                 .toMessage();
 
             const agentMessage = new Message()
-                .address(agent1Address1)
+                .address(AGENT_1_ADDRESS)
                 .text('agent message')
                 .toMessage();
 
-            addCustomerAddressToMessage(customerMessage, customer1Address);
-            addAgentAddressToMessage(agentMessage, agent1Address1);
+            addCustomerAddressToMessage(customerMessage, CUSTOMER_1_ADDRESS);
+            addAgentAddressToMessage(agentMessage, AGENT_1_ADDRESS);
 
             beforeEach(() => {
                 return provider.addCustomerMessageToTranscript(customerMessage)
-                    .then(() => provider.watchConversation(customer1Address, agent1Address1));
+                    .then(() => provider.watchConversation(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS));
             });
 
-            it('update conversation state to watching', () => {
-                return provider.getConversationFromCustomerAddress(customer1Address)
+            it('adds agent address to the watching agent list', () => {
+                return provider.getConversationFromCustomerAddress(CUSTOMER_1_ADDRESS)
                     .then((convo: IConversation) => {
-                        expect(convo.conversationState).to.be.equal(ConversationState.Watch);
-                    });
-            });
-
-            it('binds agent address to conversation', () => {
-                return provider.getConversationFromCustomerAddress(customer1Address)
-                    .then((convo: IConversation) => {
-                        expect(convo.agentAddress).not.to.be.undefined;
+                        // expect(convo.watchingAgents).to.deep.include();
                     });
             });
 
             it('set conversation state to Agent implicitly if an agent sends a message', () => {
                 return provider.addAgentMessageToTranscript(agentMessage)
-                    .then(() => provider.getConversationFromCustomerAddress(customer1Address))
+                    .then(() => provider.getConversationFromCustomerAddress(CUSTOMER_1_ADDRESS))
                     .then((convo: IConversation) => {
                         expect(convo.agentAddress).not.to.be.undefined;
                         expect(convo.conversationState).to.be.equal(ConversationState.Agent);
@@ -403,8 +619,8 @@ export function providerTest(getNewProvider: () => Promise<IProvider>, providerN
                         const firstMessage = convo.transcript[0];
                         const secondMessage = convo.transcript[1];
 
-                        expect(firstMessage.from).to.be.equal(customer1Address);
-                        expect(secondMessage.from).to.be.equal(agent1Address1);
+                        expect(firstMessage.from).to.be.equal(CUSTOMER_1_ADDRESS);
+                        expect(secondMessage.from).to.be.equal(AGENT_1_ADDRESS);
                         expect(firstMessage.text).to.be.equal('customer message');
                         expect(secondMessage.text).to.be.equal('agent message');
 
@@ -413,70 +629,70 @@ export function providerTest(getNewProvider: () => Promise<IProvider>, providerN
 
             // this is a weird case that shouldn't be hit, but I wanted to cover my bases
             it('throws error if different agent conversation than watching agent conversation attempts to connect to customer', () => {
-                return provider.connectCustomerToAgent(customer1Address, agent1Address2)
+                return provider.connectCustomerToAgent(CUSTOMER_1_ADDRESS, AGENT_2_ADDRESS)
                     .then(() => expect.fail(null, null, 'Should have thrown error or wrong convo id to connect'))
                     .catch(ConnectingAgentIsNotWatching, (e: ConnectingAgentIsNotWatching) => {
                         expect(e).to.be.an.instanceOf(ConnectingAgentIsNotWatching);
                     });
             });
 
-            it('can have conversation set to wait and watch if customer queues for agent', () => {
-                return provider.queueCustomerForAgent(customer1Address)
-                    .then(() => provider.getConversationFromCustomerAddress(customer1Address))
-                    .then((convo: IConversation) => expect(convo.conversationState).to.be.equal(ConversationState.WatchAndWait));
-            });
+            // it('can have conversation set to wait and watch if customer queues for agent', () => {
+            //     return provider.queueCustomerForAgent(customer1Address)
+            //         .then(() => provider.getConversationFromCustomerAddress(customer1Address))
+            //         .then((convo: IConversation) => expect(convo.conversationState).to.be.equal(ConversationState.WatchAndWait));
+            // });
         });
 
         describe('disconnecting user from agent', () => {
             const customerMessage = new Message()
-                .address(customer1Address)
+                .address(CUSTOMER_1_ADDRESS)
                 .text('I need to speak to an agent')
                 .toMessage();
 
             const agentMessage = new Message()
-                .address(agent1Address1)
+                .address(AGENT_1_ADDRESS)
                 .text('This is an agent, how can I help?')
                 .toMessage();
 
-            addCustomerAddressToMessage(customerMessage, customer1Address);
-            addAgentAddressToMessage(agentMessage, agent1Address1);
+            addCustomerAddressToMessage(customerMessage, CUSTOMER_1_ADDRESS);
+            addAgentAddressToMessage(agentMessage, AGENT_1_ADDRESS);
 
             beforeEach(() => {
                 return provider.addCustomerMessageToTranscript(customerMessage)
-                    .then(() => provider.connectCustomerToAgent(customer1Address, agent1Address1))
+                    .then(() => provider.connectCustomerToAgent(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS))
                     .then(() => provider.addAgentMessageToTranscript(agentMessage))
-                    .then(() => provider.getConversationFromCustomerAddress(customer1Address))
+                    .then(() => provider.getConversationFromCustomerAddress(CUSTOMER_1_ADDRESS))
                     .then((conversation: IConversation) => {
                         expect(conversation.agentAddress).not.to.be.undefined;
                         expect(conversation.transcript.length).to.be.equal(2);
                         const firstTranscript = conversation.transcript[0];
                         const secondTranscript = conversation.transcript[1];
 
-                        expect(firstTranscript.from).to.be.equal(customer1Address);
-                        expect(secondTranscript.from).to.be.equal(agent1Address1);
+                        expect(firstTranscript.from).to.be.equal(CUSTOMER_1_ADDRESS);
+                        expect(secondTranscript.from).to.be.equal(AGENT_1_ADDRESS);
                     })
-                    .then(() => provider.disconnectCustomerFromAgent(customer1Address, agent1Address1));
+                    .then(() => provider.disconnectCustomerFromAgent(CUSTOMER_1_ADDRESS, AGENT_1_ADDRESS));
             });
 
             it('changes conversation state to bot', () => {
-                return provider.getConversationFromCustomerAddress(customer1Address)
+                return provider.getConversationFromCustomerAddress(CUSTOMER_1_ADDRESS)
                     .then((convo: IConversation) => expect(convo.conversationState).to.be.equal(ConversationState.Bot));
             });
 
             it('removes agent address from conversation', () => {
-                return provider.getConversationFromCustomerAddress(customer1Address)
+                return provider.getConversationFromCustomerAddress(CUSTOMER_1_ADDRESS)
                     .then((convo: IConversation) => expect(convo.agentAddress).to.be.undefined);
             });
 
             it('causes agent to throw error if they attempt to send another message', () => {
                 const expectedErrorMessage =
-                    `no customer conversation found for agent with conversation id ${agent1Address1.conversation.id}`;
+                    `no customer conversation found for agent with conversation id ${AGENT_1_ADDRESS.conversation.id}`;
 
                 return provider.addAgentMessageToTranscript(agentMessage)
                     .then(() => expect.fail(null, null, 'agent sending message to user they are not connected to didn\'t throw exception'))
                     .catch(AgentNotInConversationError, (e: AgentNotInConversationError) => {
                         expect(e).to.be.an.instanceOf(AgentNotInConversationError);
-                        expect(e.message).to.be.equal(new AgentNotInConversationError(agent1Address1.conversation.id).message);
+                        expect(e.message).to.be.equal(new AgentNotInConversationError(AGENT_1_ADDRESS.conversation.id).message);
                     });
             });
 

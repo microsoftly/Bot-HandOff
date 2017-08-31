@@ -1,4 +1,4 @@
-import { Session, UniversalBot } from 'botbuilder';
+import { IAddress, Session, UniversalBot } from 'botbuilder';
 import { ConversationState, IConversation } from '../IConversation';
 import { IHandoffMessage } from '../IHandoffMessage';
 import { MessageReceivedWhileWaitingHandler } from '../options/MessageReceivedWhileWaitingHandler';
@@ -18,37 +18,25 @@ export class CustomerMessageRouter extends Router {
     //tslint:enable
         const customerAddress = session.message.address;
 
-            return this.provider.getConversationFromCustomerAddress(customerAddress)
-                .then((convo: IConversation) => {
-                    if (convo) {
-                        const agentAddress = convo.agentAddress;
-                        const agentMirrorMessage = Object.assign({}, session.message, { address: agentAddress, value: 'customerMessage'});
+        return this.provider.getConversationFromCustomerAddress(customerAddress)
+            .then((convo: IConversation) => {
+                if (convo) {
+                    const mirrorMessages = convo.watchingAgents.map(
+                        (watchingAgentAddress: IAddress) => Object.assign({}, session.message, { address: watchingAgentAddress }));
 
-                        switch (convo.conversationState) {
-                            case ConversationState.Watch:
-                                this.bot.send(agentMirrorMessage);
+                    this.bot.send(mirrorMessages);
 
-                                return next();
-                            case ConversationState.Bot:
-                                return next();
-                            case ConversationState.Agent:
-                                return this.bot.send(agentMirrorMessage);
-                            case ConversationState.Wait:
-                                this.messageReceivedWhileWaitingHandler(this.bot, session, next);
-                                break;
-                            case ConversationState.WatchAndWait:
-                                this.messageReceivedWhileWaitingHandler(this.bot, session, next);
-                                this.bot.send(agentMirrorMessage);
-                                break;
-                            default:
-                                return next();
-                        }
+                    if (convo.conversationState === ConversationState.Wait) {
+                        return this.messageReceivedWhileWaitingHandler(this.bot, session, next);
                     } else {
-                        return this.provider.addCustomerMessageToTranscript(session.message)
-                        //tslint:disable
-                            .then(() => next());
-                        //tslint:enable
+                        next();
                     }
-                });
+                } else {
+                    return this.provider.addCustomerMessageToTranscript(session.message)
+                    //tslint:disable
+                        .then(() => next());
+                    //tslint:enable
+                }
+            });
     }
 }

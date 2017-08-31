@@ -36,11 +36,11 @@ export class InMemoryConversationAgentManager {
      */
     public removeWatchingAgent(customerAddressOrConvoId: string | IAddress, agentAddress: IAddress): boolean {
         const convo = this.getConvo(customerAddressOrConvoId);
-        const initialAgentWatchCount = convo.watchingAgents.length;
 
-        convo.watchingAgents = remove(convo.watchingAgents, (addr: IAddress) => isEqual(addr, agentAddress));
+        // returns colleciton of removed addresses
+        const removedAddresses = remove(convo.watchingAgents, (addr: IAddress) => isEqual(addr, agentAddress));
 
-        return convo.watchingAgents.length !== initialAgentWatchCount;
+        return !!removedAddresses.length;
     }
 
     /**
