@@ -1,4 +1,4 @@
-# bot-handoff [![CircleCI](https://circleci.com/gh/microsoftly/Bot-HandOff.svg?style=shield)](https://circleci.com/gh/microsoftly/BotTester) [![npm version](https://badge.fury.io/js/bot-handoff.svg)](https://badge.fury.io/js/bot-tester) [![Coverage Status](https://coveralls.io/repos/github/microsoftly/Bot-HandOff/badge.svg?branch=master)](https://coveralls.io/github/microsoftly/Bot-HandOff?branch=master)
+# bot-handoff [![CircleCI](https://circleci.com/gh/microsoftly/Bot-HandOff.svg?style=shield)](https://circleci.com/gh/microsoftly/bot-handoff) [![npm version](https://badge.fury.io/js/bot-handoff.svg)](https://badge.fury.io/js/bot-handoff) [![Coverage Status](https://coveralls.io/repos/github/microsoftly/bot-handoff/badge.svg?branch=master)](https://coveralls.io/github/microsoftly/bot-handoff?branch=master)
 
 A common request from companies and organizations considering bots is the ability to "hand off" a customer from a bot to a human agent, as seamlessly as possible.
 
