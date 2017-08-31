@@ -5,7 +5,7 @@
   "description": "Bot hand off module for the Microsoft Bot Framework. It allows you to transfer a customer from talking to a bot to talking to a human.",
   "main": "dist/src/applyHandoffMiddleware.js",
   "types": "dist/src/applyHandoffMiddleware.d.ts",
-  "homepage": "https://github.com/palindromed/Bot-HandOff/tree/npm-handoff",
+  "homepage": "https://github.com/microsoftly/bot-handoff",
   "scripts": {
     "prepublishOnly": "npm run testPublish",
     "build": "node_modules/.bin/tsc",
@@ -17,7 +17,8 @@
     "coverageTests": "nyc node_modules/.bin/_mocha --require source-map-support/register",
     "testPublish": " npm run cleanBuild && node_modules/.bin/_mocha dist/test/*.spec.js",
     "testWatch": "watch-run -i -p 'src/**/*.ts,test/**/*.ts' npm test",
-    "coverage": "npm run coverageTests && nyc report --reporter=text-lcov | node_modules/.bin/coveralls"
+    "coverage": "npm run coverageTests && nyc report --reporter=text-lcov | node_modules/.bin/coveralls",
+    "buildTypeDocs": "yarn cleanBuild && typedoc --excludeNotExported --out docs --hideGenerator src/applyHandoffMiddleware.ts --module commonjs --gaID UA-105708494-1 --readme none"
   },
   "nyc": {
     "extension": [
@@ -36,7 +37,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/palindromed/Bot-HandOff.git"
+    "url": "git+https://github.com/microsoftly/bot-handoff.git"
   },
   "keywords": [
     "bot",
