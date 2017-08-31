@@ -1,0 +1,8 @@
+node_modules
+dist
+.vscode/launch.json
+example/.vscode/launch.json
+*.map
+.nyc*
+coverage
+yarn-error.log
