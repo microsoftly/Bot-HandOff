@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "license": "MIT",
   "description": "Bot hand off module for the Microsoft Bot Framework. It allows you to transfer a customer from talking to a bot to talking to a human.",
-  "main": "dist/src/applyHandoffMiddleware.js",
-  "types": "dist/src/applyHandoffMiddleware.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "homepage": "https://github.com/microsoftly/bot-handoff",
   "scripts": {
     "prepublishOnly": "npm run testPublish",

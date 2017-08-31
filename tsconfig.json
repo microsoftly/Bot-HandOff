@@ -8,7 +8,7 @@
         "declaration": true
     },
     "files": [
-        "./src/applyHandoffMiddleware.ts",
+        "./src/index.ts",
         "./test/AgentHandoff.spec.ts",
         "./test/provider.spec.ts",
         "./test/handoffMessageEvents.spec.ts",
