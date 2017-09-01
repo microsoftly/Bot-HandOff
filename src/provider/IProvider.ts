@@ -1,7 +1,7 @@
 import * as Promise from 'bluebird';
 import { IAddress, IMessage } from 'botbuilder';
 import { IConversation } from '../IConversation';
-import { IHandoffMessage } from './../IHandoffMessage';
+// import { IHandoffMessage } from './../IHandoffMessage';
 
 export interface IProvider {
 
@@ -10,28 +10,28 @@ export interface IProvider {
      *
      * @param message message to be transcribed
      */
-    addCustomerMessageToTranscript(message: IHandoffMessage): Promise<IConversation>;
+    addCustomerMessageToTranscript(message: IMessage): Promise<IConversation>;
 
     /**
      * transcribes a message for an Agent
      *
      * @param message message to be transcribed
      */
-    addAgentMessageToTranscript(message: IHandoffMessage): Promise<IConversation>;
+    addAgentMessageToTranscript(message: IMessage): Promise<IConversation>;
 
     /**
      * transcribes a message for a bot
      *
      * @param message message to be transcribed
      */
-    addBotMessageToTranscript(message: IHandoffMessage): Promise<IConversation>;
+    addBotMessageToTranscript(message: IMessage): Promise<IConversation>;
 
     /**
      * transcribes a message for a bot. Will not throw any checked (known) exceptions
      *
      * @param message message to be transcribed
      */
-    addBotMessageToTranscriptIgnoringConversationState(message: IHandoffMessage): Promise<IConversation>;
+    addBotMessageToTranscriptIgnoringConversationState(message: IMessage): Promise<IConversation>;
     /*
         there are 3 basic pairwise actions that can be performed
             1. connect/disconnect customer to/from agent

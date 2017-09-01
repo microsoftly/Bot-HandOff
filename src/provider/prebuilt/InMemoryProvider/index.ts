@@ -1,39 +1,15 @@
 import * as Promise from 'bluebird';
-import { IAddress } from 'botbuilder';
+import { IAddress, IMessage } from 'botbuilder';
 import * as _ from 'lodash';
 import { ConversationState, IConversation} from '../../../IConversation';
-import { IHandoffMessage } from '../../../IHandoffMessage';
+// import { IMessage } from '../../../IMessage';
 import { AgentAlreadyInConversationError} from '../../errors/AgentAlreadyInConversationError';
 import { AgentNotInConversationError} from '../../errors/AgentNotInConversationError';
 import { BotAttemptedToRecordMessageWhileAgentHasConnection} from '../../errors/BotAttemptedToRecordMessageWhileAgentHasConnection';
 import { CustomerAlreadyConnectedException } from '../../errors/CustomerAlreadyConnectedException';
 import { IProvider } from '../../IProvider';
-// import { AgentToCustomerAddressProvider } from './AgentToCustomerAddressProvider';
 import { AgentToCustomerConnectionMapper } from './AgentToCustomerConnectionMapper';
 import { Conversation } from './Conversation';
-// import { InMemoryConversationProvider } from './InMemoryConversationProvider';
-
-function ensureCustomerAddressDefinedOnHandoffMessage(msg: IHandoffMessage): void {
-    if (!msg.customerAddress) {
-        throw new Error('customer address must be defined on a Handoff message in this function');
-    }
-}
-
-function ensureAgentAddressDefinedOnHandoffMessage(msg: IHandoffMessage): void {
-    if (!msg.agentAddress) {
-        throw new Error('agent address must be defined');
-    }
-}
-
-function ensureCustomerAndAgentAddressDefined(customerAddress: IAddress, agentAddress: IAddress): void {
-    if (!agentAddress) {
-        throw new Error('agent address must be defined');
-    }
-
-    if (!customerAddress) {
-        throw new Error('customer address must be defined');
-    }
-}
 
 export class InMemoryProvider implements IProvider {
     private conversations: Map<string, Conversation>;
@@ -42,13 +18,10 @@ export class InMemoryProvider implements IProvider {
     constructor() {
         this.conversations = new Map<string, Conversation>();
         this.agentToCustomerConnectionMapper = new AgentToCustomerConnectionMapper();
-        // this.agentConvoToCustomerAddressProvider = new AgentToCustomerAddressProvider();
     }
 
-    public addBotMessageToTranscript(message: IHandoffMessage): Promise<IConversation> {
-        ensureCustomerAddressDefinedOnHandoffMessage(message);
-
-        const customerAddress = message.customerAddress;
+    public addBotMessageToTranscript(message: IMessage): Promise<IConversation> {
+        const customerAddress = message.address;
 
         const convo = this.conversations.get(customerAddress.user.id);
 
@@ -59,10 +32,8 @@ export class InMemoryProvider implements IProvider {
         return this.addBotMessageToTranscriptIgnoringConversationState(message);
     }
 
-    public addBotMessageToTranscriptIgnoringConversationState(message: IHandoffMessage): Promise<IConversation> {
-        ensureCustomerAddressDefinedOnHandoffMessage(message);
-
-        const customerAddress = message.customerAddress;
+    public addBotMessageToTranscriptIgnoringConversationState(message: IMessage): Promise<IConversation> {
+        const customerAddress = message.address;
         const convo = this.getConversationSynchronously(customerAddress);
 
         convo.addBotMessage(message);
@@ -70,10 +41,8 @@ export class InMemoryProvider implements IProvider {
         return Promise.resolve(convo);
     }
 
-    public addCustomerMessageToTranscript(message: IHandoffMessage): Promise<IConversation> {
-        ensureCustomerAddressDefinedOnHandoffMessage(message);
-
-        const customerAddress = message.customerAddress;
+    public addCustomerMessageToTranscript(message: IMessage): Promise<IConversation> {
+        const customerAddress = message.address;
         const convo = this.getOrCreateNewCustomerConversationSynchronously(customerAddress);
 
         convo.addCustomerMessage(message);
@@ -81,10 +50,8 @@ export class InMemoryProvider implements IProvider {
         return Promise.resolve(convo);
     }
 
-    public addAgentMessageToTranscript(message: IHandoffMessage): Promise<IConversation> {
-        ensureAgentAddressDefinedOnHandoffMessage(message);
-
-        const agentAddress = message.agentAddress;
+    public addAgentMessageToTranscript(message: IMessage): Promise<IConversation> {
+        const agentAddress = message.address;
         const customerId = this.agentToCustomerConnectionMapper.getCustomerIdConnectedToAgent(agentAddress);
         const convo = this.conversations.get(customerId);
 
@@ -93,8 +60,6 @@ export class InMemoryProvider implements IProvider {
 
             return Promise.reject(new AgentNotInConversationError(agentAddress.conversation.id));
         }
-
-        // const convo = this.getConversationSynchronously(customerAddress);
 
         if (convo.conversationState !== ConversationState.Agent) {
             convo.setConversationStateToAgent(agentAddress);
@@ -111,8 +76,6 @@ export class InMemoryProvider implements IProvider {
 
     // CONNECT/DISCONNECT ACTIONS
     public connectCustomerToAgent(customerAddress: IAddress, agentAddress: IAddress): Promise<IConversation> {
-        ensureCustomerAndAgentAddressDefined(customerAddress, agentAddress);
-
         const convo = this.conversations.get(customerAddress.user.id);
 
         if (convo.conversationState === ConversationState.Agent) {

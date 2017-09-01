@@ -10,14 +10,16 @@ import { IHandoffMessage } from './../IHandoffMessage';
  * @param agentMessageRouter agent message route handler
  */
 export function getRouteMessgeMiddleware(
+    isAgentFn: (session: Session) => Promise<boolean>,
     customerMessageRouter: CustomerMessageRouter,
     agentMessageRouter: AgentMessageRouter
-): (session: Session, next: Function) => void {
-    return (session: Session, next: Function) => {
+): (session: Session, next: Function) => Promise<void> {
+    return async (session: Session, next: Function): Promise<void> => {
         if (session.message.type === 'message') {
-            const message = session.message as IHandoffMessage;
+            const isAgent = await isAgentFn(session);
+            const message = session.message;
 
-            if (message.agentAddress) {
+            if (isAgent) {
                 agentMessageRouter.Route(session);
             } else {
                 customerMessageRouter.Route(session, next);
