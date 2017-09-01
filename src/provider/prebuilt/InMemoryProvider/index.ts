@@ -8,7 +8,7 @@ import { AgentNotInConversationError} from '../../errors/AgentNotInConversationE
 import { BotAttemptedToRecordMessageWhileAgentHasConnection} from '../../errors/BotAttemptedToRecordMessageWhileAgentHasConnection';
 import { CustomerAlreadyConnectedException } from '../../errors/CustomerAlreadyConnectedException';
 import { IProvider } from '../../IProvider';
-import { AgentToCustomerAddressProvider } from './AgentToCustomerAddressProvider';
+// import { AgentToCustomerAddressProvider } from './AgentToCustomerAddressProvider';
 import { AgentToCustomerConnectionMapper } from './AgentToCustomerConnectionMapper';
 import { Conversation } from './Conversation';
 // import { InMemoryConversationProvider } from './InMemoryConversationProvider';
@@ -85,15 +85,16 @@ export class InMemoryProvider implements IProvider {
         ensureAgentAddressDefinedOnHandoffMessage(message);
 
         const agentAddress = message.agentAddress;
-        const customerAddress = message.customerAddress;
+        const customerId = this.agentToCustomerConnectionMapper.getCustomerIdConnectedToAgent(agentAddress);
+        const convo = this.conversations.get(customerId);
 
-        if (!customerAddress) {
+        if (!convo) {
             const rejectionMessage = `no customer conversation found for agent with conversation id ${agentAddress.conversation.id}`;
 
             return Promise.reject(new AgentNotInConversationError(agentAddress.conversation.id));
         }
 
-        const convo = this.getConversationSynchronously(customerAddress);
+        // const convo = this.getConversationSynchronously(customerAddress);
 
         if (convo.conversationState !== ConversationState.Agent) {
             convo.setConversationStateToAgent(agentAddress);
