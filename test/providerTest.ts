@@ -13,16 +13,6 @@ import { IProvider } from './../src/provider/IProvider';
 import * as TestDataProvider from './TestDataProvider';
 
 export function providerTest(getNewProvider: () => $Promise<IProvider>, providerName: string): void {
-    // const customer1IntroMessage = new Message()
-    //     .address(TestDataProvider.CUSTOMER_1)
-    //     .text('first message from customer 1')
-    //     .toMessage();
-
-    // const customer2IntroMessage = new Message()
-    //     .address(TestDataProvider.CUSTOMER_2)
-    //     .text('first message from customer 2')
-    //     .toMessage();
-
     let provider: IProvider;
 
     describe.only(providerName, () => {
@@ -125,54 +115,48 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
                 expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
             });
 
-            it('multiple agents can watch a single conversation', () => {
-                return provider.watchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_2_CONVO_1)
-                    .then((convoOut: IConversation) => convo = convoOut)
-                    .then(() => {
-                        expect(convo.watchingAgents.length).to.eq(2);
-                        expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
-                        expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_2_CONVO_1);
-                    });
+            it('multiple agents can watch a single conversation', async () => {
+                convo = await provider.watchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_2_CONVO_1);
+
+                expect(convo.watchingAgents.length).to.eq(2);
+                expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
+                expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_2_CONVO_1);
             });
 
-            it('multiple agents can watch multiple conversations', () => {
-                return provider.watchConversation(TestDataProvider.CUSTOMER_2, TestDataProvider.AGENT_2_CONVO_1)
-                    .then((convo2: IConversation) => {
-                        expect(convo.watchingAgents.length).to.eq(1);
-                        expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
+            it('multiple agents can watch multiple conversations', async () => {
+                const convo2 = await provider.watchConversation(TestDataProvider.CUSTOMER_2, TestDataProvider.AGENT_1_CONVO_2);
 
-                        expect(convo2.watchingAgents.length).to.eq(1);
-                        expect(convo2.watchingAgents).to.include(TestDataProvider.AGENT_2_CONVO_1);
-                    });
+                expect(convo.watchingAgents.length).to.eq(1);
+                expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
+
+                expect(convo2.watchingAgents.length).to.eq(1);
+                expect(convo2.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_2);
+
             });
 
             describe('unwatch', () => {
-                beforeEach(() => {
-                    return provider.unwatchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1)
-                        .then((convoOut: IConversation) => convo = convoOut);
+                beforeEach(async () => {
+                    convo = await provider.unwatchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1);
                 });
 
                 it('removes the agent from the watching agents collection', () => {
                     expect(convo.watchingAgents).not.to.include(TestDataProvider.AGENT_1_CONVO_1);
                 });
 
-                it('does not affect other agents in watch list', () => {
-                    return provider.watchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_2_CONVO_1)
-                        .then(() => provider.unwatchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1))
-                        .then((convoOut: IConversation) => convo = convoOut)
-                        .then(() => {
-                            expect(convo.watchingAgents.length).to.eq(1);
-                            expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_2_CONVO_1);
-                        });
+                it('does not affect other agents in watch list', async () => {
+                    await provider.watchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_2_CONVO_1);
+                    convo = await provider.unwatchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1);
+
+                    expect(convo.watchingAgents.length).to.eq(1);
+                    expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_2_CONVO_1);
                 });
 
-                it('does not affect other conversations with other customers', () => {
-                    return provider.watchConversation(TestDataProvider.CUSTOMER_2, TestDataProvider.AGENT_2_CONVO_1)
-                        .then((convoOut: IConversation) => convo = convoOut)
-                        .then(() => provider.unwatchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1))
-                        .then(() => {
-                            expect(convo.watchingAgents.length).to.eq(1);
-                        });
+                it('does not affect other conversations with other customers', async () => {
+                    await provider.watchConversation(TestDataProvider.CUSTOMER_2, TestDataProvider.AGENT_1_CONVO_1);
+                    await provider.unwatchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_2);
+                    convo = await provider.getConversationFromCustomerAddress(TestDataProvider.CUSTOMER_2);
+
+                    expect(convo.watchingAgents.length).to.eq(1);
                 });
             });
         });
