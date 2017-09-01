@@ -4,6 +4,7 @@ import { IConversation } from '../IConversation';
 import { IHandoffMessage } from './../IHandoffMessage';
 
 export interface IProvider {
+
     /**
      * transcribes a message for a customer
      *
@@ -63,6 +64,7 @@ export interface IProvider {
     unwatchConversation(customerAddress: IAddress, agentAddress: IAddress): Promise<IConversation>;
 
     getConversationFromCustomerAddress(customerAddress: IAddress): Promise<IConversation>;
+    getOrCreateNewCustomerConversation(customerAddress: IAddress): Promise<IConversation>;
     getConversationFromAgentAddress(agentAddress: IAddress): Promise<IConversation>;
     getAllConversations(): Promise<IConversation[]>;
 }

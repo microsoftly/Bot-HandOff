@@ -1,4 +1,4 @@
-import { IAddress, Session, UniversalBot } from 'botbuilder';
+import { IAddress, IMessage, Session, UniversalBot } from 'botbuilder';
 import { ConversationState, IConversation } from '../IConversation';
 import { IHandoffMessage } from '../IHandoffMessage';
 import { MessageReceivedWhileWaitingHandler } from '../options/MessageReceivedWhileWaitingHandler';
@@ -14,29 +14,18 @@ export class CustomerMessageRouter extends Router {
         this.messageReceivedWhileWaitingHandler = messageReceivedWhileWaitingHandler;
     }
     //tslint:disable
-    public Route(session: Session, convo: IConversation, next: Function): any {
+    public async Route(session: Session, next: Function): Promise<any> {
     //tslint:enable
         const customerAddress = session.message.address;
 
-        return this.provider.getConversationFromCustomerAddress(customerAddress)
-            .then((convo: IConversation) => {
-                if (convo) {
-                    const mirrorMessages = convo.watchingAgents.map(
-                        (watchingAgentAddress: IAddress) => Object.assign({}, session.message, { address: watchingAgentAddress }));
+        const convo = await this.provider.getOrCreateNewCustomerConversation(customerAddress);
 
-                    this.bot.send(mirrorMessages);
+        const mirrorMessages = convo.watchingAgents.map(
+            (watchingAgentAddress: IAddress) => Object.assign({}, session.message, { address: watchingAgentAddress }));
 
-                    if (convo.conversationState === ConversationState.Wait) {
-                        return this.messageReceivedWhileWaitingHandler(this.bot, session, next);
-                    } else {
-                        next();
-                    }
-                } else {
-                    return this.provider.addCustomerMessageToTranscript(session.message)
-                    //tslint:disable
-                        .then(() => next());
-                    //tslint:enable
-                }
-            });
+        await this.provider.addCustomerMessageToTranscript(session.message);
+
+        // only send the messages out once they've been successfully recorded in the transcript
+        this.bot.send(mirrorMessages);
     }
 }

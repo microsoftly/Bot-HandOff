@@ -1,4 +1,6 @@
-import { Session, UniversalBot } from 'botbuilder';
+import * as $Promise from 'bluebird';
+import { IAddress, Session, UniversalBot } from 'botbuilder';
+import { isEqual } from 'lodash';
 import { ConversationState, IConversation } from '../IConversation';
 import { IHandoffMessage } from '../IHandoffMessage';
 import { IProvider } from './../provider/IProvider';
@@ -10,20 +12,28 @@ export class AgentMessageRouter extends Router {
     }
 
     //tslint:disable
-    public Route(session: Session, conversation: IConversation): any {
-        const agentAddress = session.message.address;
+    public async Route(session: Session): Promise<any> {
     //tslint:enable
-        return this.provider.getConversationFromAgentAddress(agentAddress)
-            .then((convo: IConversation) => {
-                if (convo && convo.conversationState === ConversationState.Agent) {
-                    const customerAddress = convo.customerAddress;
-                    const customerMessageMirror: IHandoffMessage =
-                        Object.assign({ customerAddress, agentAddress }, session.message, { address: customerAddress });
+        const agentAddress = session.message.address;
+        const convo = await this.provider.getConversationFromAgentAddress(agentAddress);
 
-                    this.bot.send(customerMessageMirror);
-                } else {
-                    // throw an error?
-                }
-            });
+        if (convo && convo.conversationState === ConversationState.Agent) {
+            const customerAddress = convo.customerAddress;
+            const customerMirrorMessage: IHandoffMessage =
+                Object.assign({ customerAddress, agentAddress }, session.message, { address: customerAddress });
+
+            const agentMirrorMessages =
+                convo.watchingAgents
+                    // don't send the message back to the originating agent
+                    .filter((watchingAgentAddress: IAddress) => !isEqual(watchingAgentAddress, agentAddress))
+                    .map((watchingAgentAddress: IAddress) => Object.assign({}, session.message, { address: watchingAgentAddress }));
+
+            await this.provider.addAgentMessageToTranscript(session.message);
+
+            // only send the messages out once they've been successfully recorded in the transcript
+            this.bot.send([customerMirrorMessage, ...agentMirrorMessages]);
+        } else {
+            // throw an error?
+        }
     }
 }

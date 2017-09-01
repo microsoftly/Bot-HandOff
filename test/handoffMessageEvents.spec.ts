@@ -143,7 +143,7 @@ describe('event message', () => {
         return new BotTester(bot, CUSTOMER_ADDRESS)
             .sendMessageToBot(msg, expectedResponse)
             .runTest()
-            .then(() => provider.getConversationFromCustomerAddress(CUSTOMER_ADDRESS));
+            .then(() => provider.getOrCreateNewCustomerConversation(CUSTOMER_ADDRESS));
     }
 
     describe('connect/disconnect', () => {

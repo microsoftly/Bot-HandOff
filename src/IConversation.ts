@@ -1,18 +1,15 @@
-import { IAddress, IMessage } from 'botbuilder';
+import { IAddress, IIdentity, IMessage } from 'botbuilder';
 
 export enum ConversationState {
     Bot = 'bot',
     Wait = 'wait',
     Agent = 'agent'
-    // Watch = 'watch',
-    // WatchAndWait = 'watch & wait'
 }
 
 export interface ITranscriptLine extends IMessage {
-    // to will always be populated with the address of the message sent
-    // from will be populated with the address of the recepient, or null if the originator was the bot
-    to: IAddress;
-    from?: IAddress;
+    // whether or not to or from should represent the conversation, user, or bot is up to the implementing code
+    to: IIdentity;
+    from: IIdentity;
     sentimentScore?: number;
 }
 
@@ -25,11 +22,25 @@ export interface IConversation {
     transcript: ITranscriptLine[];
 }
 
-export function createDefaultConversation(customerAddress: IAddress): IConversation {
-    return {
-        customerAddress,
-        conversationState: ConversationState.Bot,
-        watchingAgents: [],
-        transcript: []
-    };
-}
+// export class Conversation implements IConversation {
+//     public readonly customerAddress: IAddress;
+//     public readonly watchingAgents: IAddress[];
+//     public readonly transcript: ITranscriptLine[];
+//     public agentAddress?: IAddress;
+//     public conversationState: ConversationState;
+
+//     constructor(customerAddress: IAddress) {
+//         this.customerAddress = customerAddress;
+//         this.watchingAgents = [];
+//         this.transcript = [];
+//     }
+// }
+
+// export function createDefaultConversation(customerAddress: IAddress): IConversation {
+//     return {
+//         customerAddress,
+//         conversationState: ConversationState.Bot,
+//         watchingAgents: [],
+//         transcript: []
+//     };
+// }
