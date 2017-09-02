@@ -1,4 +1,11 @@
 import { IAddress, IIdentity, IMessage, Message } from 'botbuilder';
+import { ConnectEventMessage } from '../dist/src/eventMessages/ConnectEventMessage';
+import { DequeueEventMessage } from '../dist/src/eventMessages/DequeueEventMessage';
+import { WatchEventMessage } from '../dist/src/eventMessages/WatchEventMessage';
+import { DisconnectEventMessage } from '../src/eventMessages/DisconnectEventMessage';
+import { HandoffEventMessage } from '../src/eventMessages/HandoffEventMessage';
+import { QueueEventMessage } from '../src/eventMessages/QueueEventMessage';
+import { UnwatchEventMessage } from '../src/eventMessages/UnwatchEventMessage';
 
 const bot = {
     id: 'bot',
@@ -16,7 +23,7 @@ const AGENT_2_USER: IIdentity = {
     name: 'agent2'
 };
 
-export const AGENT_1_CONVO_1: IAddress = {
+const AGENT_1_CONVO_1: IAddress = {
     bot,
     channelId,
     user: AGENT_1_USER,
@@ -25,7 +32,7 @@ export const AGENT_1_CONVO_1: IAddress = {
     }
 };
 
-export const AGENT_1_CONVO_2: IAddress = {
+const AGENT_1_CONVO_2: IAddress = {
     bot,
     channelId,
     user: AGENT_1_USER,
@@ -34,7 +41,7 @@ export const AGENT_1_CONVO_2: IAddress = {
     }
 };
 
-export const AGENT_2_CONVO_1: IAddress = {
+const AGENT_2_CONVO_1: IAddress = {
     bot,
     channelId,
     user: AGENT_2_USER,
@@ -43,7 +50,7 @@ export const AGENT_2_CONVO_1: IAddress = {
     }
 };
 
-export const AGENT_2_CONVO_2: IAddress = {
+const AGENT_2_CONVO_2: IAddress = {
     bot,
     channelId,
     user: AGENT_2_USER,
@@ -52,7 +59,7 @@ export const AGENT_2_CONVO_2: IAddress = {
     }
 };
 
-export const CUSTOMER_1: IAddress = {
+const CUSTOMER_1: IAddress = {
     bot,
     channelId,
     user: {
@@ -64,7 +71,7 @@ export const CUSTOMER_1: IAddress = {
     }
 };
 
-export const CUSTOMER_2: IAddress = {
+const CUSTOMER_2: IAddress = {
     bot,
     channelId,
     user: {
@@ -76,76 +83,198 @@ export const CUSTOMER_2: IAddress = {
     }
 };
 
-export const CUSTOMER_1_MESSAGE_1 = new Message()
+const CUSTOMER_1_MESSAGE_1 = new Message()
     .text('customer 1 FIRST message')
     .address(CUSTOMER_1)
     .toMessage();
 
-export const CUSTOMER_2_MESSAGE_1 = new Message()
+const CUSTOMER_2_MESSAGE_1 = new Message()
     .text('customer 2 FIRST message')
     .address(CUSTOMER_2)
     .toMessage();
 
-export const CUSTOMER_1_MESSAGE_2 = new Message()
+const CUSTOMER_1_MESSAGE_2 = new Message()
     .text('customer 1 SECOND message')
     .address(CUSTOMER_1)
     .toMessage();
 
-export const CUSTOMER_2_MESSAGE_2 = new Message()
+const CUSTOMER_2_MESSAGE_2 = new Message()
     .text('customer 2 SECOND message')
     .address(CUSTOMER_2)
     .toMessage();
 
-export const CUSTOMER_1_MESSAGE_3 = new Message()
+const CUSTOMER_1_MESSAGE_3 = new Message()
     .text('customer 1 THIRD message')
     .address(CUSTOMER_1)
     .toMessage();
 
-export const CUSTOMER_2_MESSAGE_3 = new Message()
+const CUSTOMER_2_MESSAGE_3 = new Message()
     .text('customer 2 THIRD message')
     .address(CUSTOMER_2)
     .toMessage();
 
-export const AGENT_1_CONVO_1_MESSAGE_1 = new Message()
+const AGENT_1_CONVO_1_MESSAGE_1 = new Message()
     .text('agent 1 convo 1 FIRST message')
     .address(AGENT_1_CONVO_1)
     .toMessage();
 
-export const AGENT_1_CONVO_2_MESSAGE_1 = new Message()
+const AGENT_1_CONVO_2_MESSAGE_1 = new Message()
     .text('agent 1 convo 2 FIRST message')
     .address(AGENT_1_CONVO_2)
     .toMessage();
 
-export const AGENT_2_CONVO_1_MESSAGE_1 = new Message()
+const AGENT_2_CONVO_1_MESSAGE_1 = new Message()
     .text('agent 2 convo 1 FIRST message')
     .address(AGENT_2_CONVO_1)
     .toMessage();
 
-export const AGENT_2_CONVO_2_MESSAGE_1 = new Message()
+const AGENT_2_CONVO_2_MESSAGE_1 = new Message()
     .text('agent 2 convo 2 FIRST message')
     .address(AGENT_2_CONVO_2)
     .toMessage();
 
-export const AGENT_1_CONVO_1_MESSAGE_2 = new Message()
+const AGENT_1_CONVO_1_MESSAGE_2 = new Message()
     .text('agent 1 convo 1 SECOND message')
     .address(AGENT_1_CONVO_1)
     .toMessage();
 
-export const AGENT_1_CONVO_2_MESSAGE_2 = new Message()
+const AGENT_1_CONVO_2_MESSAGE_2 = new Message()
     .text('agent 1 convo 2 SECOND message')
     .address(AGENT_1_CONVO_2)
     .toMessage();
 
-export const AGENT_2_CONVO_1_MESSAGE_2 = new Message()
+const AGENT_2_CONVO_1_MESSAGE_2 = new Message()
     .text('agent 2 convo 1 SECOND message')
     .address(AGENT_2_CONVO_1)
     .toMessage();
 
-export const AGENT_2_CONVO_2_MESSAGE_2 = new Message()
+const AGENT_2_CONVO_2_MESSAGE_2 = new Message()
     .text('agent 2 convo 2 SECOND message')
     .address(AGENT_2_CONVO_2)
     .toMessage();
 
-export function getExpectedReceivedMessage(originalMessage: IMessage, expectedAddress: IAddress): IMessage {
+const AGENT_1_CONVO_1_MESSAGE_3 = new Message()
+    .text('agent 1 convo 1 THIRD message')
+    .address(AGENT_1_CONVO_1)
+    .toMessage();
+
+const AGENT_1_CONVO_2_MESSAGE_3 = new Message()
+    .text('agent 1 convo 2 THIRD message')
+    .address(AGENT_1_CONVO_2)
+    .toMessage();
+
+const AGENT_2_CONVO_1_MESSAGE_3 = new Message()
+    .text('agent 2 convo 1 THIRD message')
+    .address(AGENT_2_CONVO_1)
+    .toMessage();
+
+const AGENT_2_CONVO_2_MESSAGE_3 = new Message()
+    .text('agent 2 convo 2 THIRD message')
+    .address(AGENT_2_CONVO_2)
+    .toMessage();
+
+function getExpectedReceivedMessage(originalMessage: IMessage, expectedAddress: IAddress): IMessage {
     return Object.assign({}, originalMessage, { address: expectedAddress });
 }
+
+// tslint:disable
+// I'm too lazy to build the return type for this ...
+function getCustomerEventMessages(customerAddress: IAddress) {
+// tslint:enable
+    return {
+        toQueue: new QueueEventMessage(customerAddress),
+        toDequeue: new DequeueEventMessage(customerAddress)
+    };
+}
+
+//tslint:disable
+// I'm too lazy to type out the return type
+function getAgentEventMessagesForConversation(convoAddress: IAddress) {
+//tslint:enable
+    return {
+        toConnectTo: {
+            customer1: new ConnectEventMessage(CUSTOMER_1, convoAddress),
+            customer2: new ConnectEventMessage(CUSTOMER_2, convoAddress)
+        },
+        toDisconnectFrom: {
+            customer1: new DisconnectEventMessage(CUSTOMER_1, convoAddress),
+            customer2: new DisconnectEventMessage(CUSTOMER_2, convoAddress)
+        },
+        toWatch: {
+            customer1: new WatchEventMessage(CUSTOMER_1, convoAddress),
+            customer2: new WatchEventMessage(CUSTOMER_2, convoAddress)
+        },
+        toUnwatch: {
+            customer1: new UnwatchEventMessage(CUSTOMER_1, convoAddress),
+            customer2: new UnwatchEventMessage(CUSTOMER_2, convoAddress)
+        }
+    };
+}
+
+export const agent1 = {
+    user: AGENT_1_USER,
+
+    convo1: {
+        address: AGENT_1_CONVO_1,
+
+        message1: AGENT_1_CONVO_1_MESSAGE_1,
+        message2: AGENT_1_CONVO_1_MESSAGE_2,
+        message3: AGENT_1_CONVO_1_MESSAGE_3,
+
+        eventMessage: getAgentEventMessagesForConversation(AGENT_1_CONVO_1)
+    },
+
+    convo2: {
+        address: AGENT_1_CONVO_2,
+
+        message1: AGENT_1_CONVO_2_MESSAGE_1,
+        message2: AGENT_1_CONVO_2_MESSAGE_2,
+        message3: AGENT_1_CONVO_2_MESSAGE_3,
+
+        eventMessage: getAgentEventMessagesForConversation(AGENT_1_CONVO_2)
+    }
+};
+
+export const agent2 = {
+    user: AGENT_2_USER,
+
+    convo1: {
+        address: AGENT_2_CONVO_1,
+
+        message1: AGENT_2_CONVO_1_MESSAGE_1,
+        message2: AGENT_2_CONVO_1_MESSAGE_2,
+        message3: AGENT_2_CONVO_1_MESSAGE_3,
+
+        eventMessage: getAgentEventMessagesForConversation(AGENT_2_CONVO_1)
+    },
+
+    convo2: {
+        address: AGENT_2_CONVO_2,
+
+        message1: AGENT_2_CONVO_2_MESSAGE_1,
+        message2: AGENT_2_CONVO_2_MESSAGE_2,
+        message3: AGENT_2_CONVO_2_MESSAGE_3,
+
+        eventMessage: getAgentEventMessagesForConversation(AGENT_2_CONVO_2)
+    }
+};
+
+export const customer1 = {
+    address: CUSTOMER_1,
+
+    message1: CUSTOMER_1_MESSAGE_1,
+    message2: CUSTOMER_1_MESSAGE_2,
+    message3: CUSTOMER_1_MESSAGE_3,
+
+    eventMessages: getCustomerEventMessages(CUSTOMER_1)
+};
+
+export const customer2 = {
+    address: CUSTOMER_2,
+
+    message1: CUSTOMER_2_MESSAGE_1,
+    message2: CUSTOMER_2_MESSAGE_2,
+    message3: CUSTOMER_2_MESSAGE_3,
+
+    eventMessage: getCustomerEventMessages(CUSTOMER_2)
+};

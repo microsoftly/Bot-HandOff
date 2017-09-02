@@ -4,11 +4,17 @@ import { isEqual } from 'lodash';
 import { ConversationState, IConversation } from '../IConversation';
 import { IHandoffMessage } from '../IHandoffMessage';
 import { IProvider } from './../provider/IProvider';
-import { Router } from './Router';
+// import { Router } from './Router';
 
-export class AgentMessageRouter extends Router {
-    constructor(bot: UniversalBot, provider: IProvider) {
-        super(bot, provider);
+export class AgentMessageRouter {
+    private bot: UniversalBot;
+    private provider: IProvider;
+    private shouldTranscribeMessage: boolean;
+
+    constructor(bot: UniversalBot, provider: IProvider, shouldTranscribeMessage: boolean) {
+        this.bot = bot;
+        this.provider = provider;
+        this.shouldTranscribeMessage = shouldTranscribeMessage;
     }
 
     //tslint:disable
@@ -28,7 +34,9 @@ export class AgentMessageRouter extends Router {
                     .filter((watchingAgentAddress: IAddress) => !isEqual(watchingAgentAddress, agentAddress))
                     .map((watchingAgentAddress: IAddress) => Object.assign({}, session.message, { address: watchingAgentAddress }));
 
-            await this.provider.addAgentMessageToTranscript(session.message);
+            if (this.shouldTranscribeMessage) {
+                await this.provider.addAgentMessageToTranscript(session.message);
+            }
 
             // only send the messages out once they've been successfully recorded in the transcript
             this.bot.send([customerMirrorMessage, ...agentMirrorMessages]);

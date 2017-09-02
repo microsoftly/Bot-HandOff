@@ -3,7 +3,7 @@ import { isEqual, isMatch, remove } from 'lodash';
 import { ConversationState, IConversation, ITranscriptLine } from '../../../IConversation';
 import { IHandoffMessage } from '../../../IHandoffMessage';
 
-export class Conversation implements IConversation {
+export class InMemoryConversation implements IConversation {
     public readonly customerAddress: IAddress;
     public readonly watchingAgents: IAddress[];
     public readonly transcript: ITranscriptLine[];

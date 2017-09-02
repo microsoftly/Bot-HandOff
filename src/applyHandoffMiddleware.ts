@@ -13,7 +13,7 @@ import { CustomerMessageRouter } from './routers/CustomerMessageRouter';
 
 export function applyHandoffMiddleware(
     bot: UniversalBot,
-    isAgent: (session: Session) => boolean | Promise<boolean>,
+    isAgent: (session: Session) => boolean | PromiseLike<boolean>,
     provider: IProvider = new InMemoryProvider(),
     options?: IHandoffOptions
 ): void {
@@ -28,14 +28,14 @@ export function applyHandoffMiddleware(
     ];
 
     if (options.shouldTranscribeMessages) {
-        botbuilder.push(getTranscribeNonBotMessagesMiddleware(provider));
+        // botbuilder.push(getTranscribeNonBotMessagesMiddleware(provider));
     }
 
     botbuilder.push(
         getRouteMessgeMiddleware(
             isAgentFn,
-            new CustomerMessageRouter(bot, provider, options.messageReceivedWhileWaitingHandler),
-            new AgentMessageRouter(bot, provider)));
+            new CustomerMessageRouter(bot, provider, options.shouldTranscribeMessages, options.messageReceivedWhileWaitingHandler),
+            new AgentMessageRouter(bot, provider, options.shouldTranscribeMessages)));
 
     const send = [];
 

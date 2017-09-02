@@ -1,10 +1,6 @@
 import * as $Promise from 'bluebird';
-import { IAddress, IMessage, Message } from 'botbuilder';
 import { expect } from 'chai';
-import { IHandoffMessage } from '../src/IHandoffMessage';
-import { ConversationState, IConversation, ITranscriptLine } from './../src/IConversation';
-import { AgentAlreadyInConversationError } from './../src/provider/errors/AgentAlreadyInConversationError';
-import { ConnectingAgentIsNotWatching } from './../src/provider/errors/AgentConnectingIsNotSameAsWatching';
+import { ConversationState, IConversation } from './../src/IConversation';
 import { AgentNotInConversationError } from './../src/provider/errors/AgentNotInConversationError';
 import {
     BotAttemptedToRecordMessageWhileAgentHasConnection
@@ -24,8 +20,8 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
             return getNewProvider()
                 .then((newProvider: IProvider) => provider = newProvider)
                 .then(() => $Promise.all([
-                    provider.addCustomerMessageToTranscript(TestDataProvider.CUSTOMER_1_MESSAGE_1),
-                    provider.addCustomerMessageToTranscript(TestDataProvider.CUSTOMER_2_MESSAGE_1)
+                    provider.addCustomerMessageToTranscript(TestDataProvider.customer1.message1),
+                    provider.addCustomerMessageToTranscript(TestDataProvider.customer2.message1)
                 ]))
                 .spread((customer1ConvoOut: IConversation, customer2ConvoOut: IConversation) => {
                     customer1Convo = customer1ConvoOut;
@@ -36,8 +32,8 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
         describe('customer messages', () => {
             beforeEach(() => {
                 return $Promise.all([
-                        provider.addCustomerMessageToTranscript(TestDataProvider.CUSTOMER_1_MESSAGE_2),
-                        provider.addCustomerMessageToTranscript(TestDataProvider.CUSTOMER_2_MESSAGE_2)
+                        provider.addCustomerMessageToTranscript(TestDataProvider.customer1.message2),
+                        provider.addCustomerMessageToTranscript(TestDataProvider.customer2.message2)
                     ])
                     .spread((customer1ConvoOut: IConversation, customer2ConvoOut: IConversation) => {
                         customer1Convo = customer1ConvoOut;
@@ -47,23 +43,23 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
 
             it('can be uniquely retrieved for separate customers', () => {
                 expect(customer1Convo.transcript.length).to.eq(2);
-                expect(customer1Convo.transcript[0].text).to.eq(TestDataProvider.CUSTOMER_1_MESSAGE_1.text);
-                expect(customer1Convo.transcript[1].text).to.eq(TestDataProvider.CUSTOMER_1_MESSAGE_2.text);
+                expect(customer1Convo.transcript[0].text).to.eq(TestDataProvider.customer1.message1.text);
+                expect(customer1Convo.transcript[1].text).to.eq(TestDataProvider.customer1.message2.text);
 
                 expect(customer2Convo.transcript.length).to.eq(2);
-                expect(customer2Convo.transcript[0].text).to.eq(TestDataProvider.CUSTOMER_2_MESSAGE_1.text);
-                expect(customer2Convo.transcript[1].text).to.eq(TestDataProvider.CUSTOMER_2_MESSAGE_2.text);
+                expect(customer2Convo.transcript[0].text).to.eq(TestDataProvider.customer2.message1.text);
+                expect(customer2Convo.transcript[1].text).to.eq(TestDataProvider.customer2.message2.text);
             });
 
             it('saves the customer address to the conversation', () => {
-                expect(customer1Convo.customerAddress).to.deep.eq(TestDataProvider.CUSTOMER_1);
-                expect(customer2Convo.customerAddress).to.deep.eq(TestDataProvider.CUSTOMER_2);
+                expect(customer1Convo.customerAddress).to.deep.eq(TestDataProvider.customer1.address);
+                expect(customer2Convo.customerAddress).to.deep.eq(TestDataProvider.customer2.address);
             });
         });
 
         describe('queue/dequeue', () => {
             beforeEach(async () => {
-                convo = await provider.queueCustomerForAgent(TestDataProvider.CUSTOMER_1);
+                convo = await provider.queueCustomerForAgent(TestDataProvider.customer1.address);
             });
 
             it('queue sets conversation state to wait', () => {
@@ -77,18 +73,18 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
 
             // assumes watch works
             it('watch and unwatch does not affect wait conversation state', async () => {
-                convo = await provider.watchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1);
+                convo = await provider.watchConversation(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
 
                 expect(convo.conversationState).to.eq(ConversationState.Wait);
 
-                convo = await provider.unwatchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1);
+                convo = await provider.unwatchConversation(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
 
                 expect(convo.conversationState).to.eq(ConversationState.Wait);
             });
 
             describe('dequeue', () => {
                 beforeEach(async () => {
-                    convo = await provider.dequeueCustomerForAgent(TestDataProvider.CUSTOMER_1);
+                    convo = await provider.dequeueCustomerForAgent(TestDataProvider.customer1.address);
                 });
 
                 it('returns the state to bot', () => {
@@ -104,7 +100,7 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
 
         describe('watch/unwatch', () => {
             beforeEach(async () => {
-                convo = await provider.watchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1);
+                convo = await provider.watchConversation(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
             });
 
             it('watch does not affect conversation state', () => {
@@ -112,58 +108,60 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
             });
 
             it('watch adds the agent address to the watching agents collection', () => {
-                expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
+                expect(convo.watchingAgents).to.include(TestDataProvider.agent1.convo1.address);
             });
 
             it('multiple agents can watch a single conversation', async () => {
-                convo = await provider.watchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_2_CONVO_1);
+                convo = await provider.watchConversation(TestDataProvider.customer1.address, TestDataProvider.agent2.convo1.address);
 
                 expect(convo.watchingAgents.length).to.eq(2);
-                expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
-                expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_2_CONVO_1);
+                expect(convo.watchingAgents).to.include(TestDataProvider.agent1.convo1.address);
+                expect(convo.watchingAgents).to.include(TestDataProvider.agent2.convo1.address);
             });
 
             it('multiple agents can watch multiple conversations', async () => {
-                const convo2 = await provider.watchConversation(TestDataProvider.CUSTOMER_2, TestDataProvider.AGENT_1_CONVO_2);
+                const convo2 = await provider.watchConversation(TestDataProvider.customer2.address, TestDataProvider.agent1.convo2.address);
 
                 expect(convo.watchingAgents.length).to.eq(1);
-                expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
+                expect(convo.watchingAgents).to.include(TestDataProvider.agent1.convo1.address);
 
                 expect(convo2.watchingAgents.length).to.eq(1);
-                expect(convo2.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_2);
+                expect(convo2.watchingAgents).to.include(TestDataProvider.agent1.convo2.address);
 
             });
 
             describe('unwatch', () => {
                 beforeEach(async () => {
-                    convo = await provider.unwatchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1);
+                    convo = await provider.unwatchConversation(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
                 });
 
                 it('removes the agent from the watching agents collection', () => {
-                    expect(convo.watchingAgents).not.to.include(TestDataProvider.AGENT_1_CONVO_1);
+                    expect(convo.watchingAgents).not.to.include(TestDataProvider.agent1.convo1.address);
                 });
 
                 it('does not affect other agents in watch list', async () => {
-                    await provider.watchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_2_CONVO_1);
-                    convo = await provider.unwatchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1);
+                    await provider.watchConversation(TestDataProvider.customer1.address, TestDataProvider.agent2.convo1.address);
+                    convo = await provider.unwatchConversation(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
 
                     expect(convo.watchingAgents.length).to.eq(1);
-                    expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_2_CONVO_1);
+                    expect(convo.watchingAgents).to.include(TestDataProvider.agent2.convo1.address);
                 });
 
                 it('does not affect other conversations with other customers', async () => {
-                    await provider.watchConversation(TestDataProvider.CUSTOMER_2, TestDataProvider.AGENT_1_CONVO_1);
-                    await provider.unwatchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_2);
-                    convo = await provider.getConversationFromCustomerAddress(TestDataProvider.CUSTOMER_2);
+                    await provider.watchConversation(TestDataProvider.customer2.address, TestDataProvider.agent1.convo1.address);
+                    await provider.unwatchConversation(TestDataProvider.customer1.address, TestDataProvider.agent1.convo2.address);
+                    const convoCustomer1 = await provider.getConversationFromCustomerAddress(TestDataProvider.customer1.address);
+                    const convoCustomer2 = await provider.getConversationFromCustomerAddress(TestDataProvider.customer2.address);
 
-                    expect(convo.watchingAgents.length).to.eq(1);
+                    expect(convoCustomer1.watchingAgents.length).to.eq(0);
+                    expect(convoCustomer2.watchingAgents.length).to.eq(1);
                 });
             });
         });
 
         describe('connect/disconnect', () => {
             beforeEach(async () => {
-                convo = await provider.connectCustomerToAgent(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1);
+                convo = await provider.connectCustomerToAgent(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
             });
 
             it('sets conversation state to agent', () => {
@@ -171,31 +169,32 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
             });
 
             it('adds the agent address to the watching agent list', () => {
-                expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
+                expect(convo.watchingAgents).to.include(TestDataProvider.agent1.convo1.address);
             });
 
             it('sets agentAddress on conversation', () => {
-                expect(convo.agentAddress).to.eq(TestDataProvider.AGENT_1_CONVO_1);
+                expect(convo.agentAddress).to.eq(TestDataProvider.agent1.convo1.address);
             });
 
             it('agent messages are transcribed to the connected customer conversation', async () => {
-                await provider.addAgentMessageToTranscript(TestDataProvider.AGENT_1_CONVO_1_MESSAGE_1);
+                await provider.addAgentMessageToTranscript(TestDataProvider.agent1.convo1.message1);
 
-                convo = await provider.getConversationFromAgentAddress(TestDataProvider.AGENT_1_CONVO_1);
+                convo = await provider.getConversationFromAgentAddress(TestDataProvider.agent1.convo1.address);
 
                 expect(convo.transcript.length).to.eq(2);
             });
 
             it('throws an error if a bot message is recorded while agent-customer connection is established', () => {
                 // can pass in any message for customer 1 for this to work
-                return provider.addBotMessageToTranscript(TestDataProvider.CUSTOMER_1_MESSAGE_1)
+                return provider.addBotMessageToTranscript(TestDataProvider.customer1.message1)
                     .then(() => expect.fail('should have thrown an error'))
                     .catch((e: Error) => expect(e).to.be.instanceOf(BotAttemptedToRecordMessageWhileAgentHasConnection));
             });
 
             describe('disconnect', () => {
                 beforeEach(async () => {
-                    convo = await provider.disconnectCustomerFromAgent(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1);
+                    convo = await
+                        provider.disconnectCustomerFromAgent(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
                 });
 
                 it('sets conversation state to bot', () => {
@@ -212,26 +211,26 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
 
                 it('throws not connected error if the agent not connected and agent transcription attempt occurs', () => {
                     // as long as the messsage is sourced from agent 2, this is good
-                    return provider.addAgentMessageToTranscript(TestDataProvider.AGENT_2_CONVO_1_MESSAGE_1)
+                    return provider.addAgentMessageToTranscript(TestDataProvider.agent2.convo1.message1)
                         .then(() => expect.fail('should throw an AgentNotInConversationError'))
                         .catch((e: Error) => expect(e).to.be.instanceOf(AgentNotInConversationError));
                 });
 
                 it('does not affect other watching agents', async () => {
-                    await provider.connectCustomerToAgent(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_1_CONVO_1);
-                    convo = await provider.watchConversation(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_2_CONVO_1);
+                    await provider.connectCustomerToAgent(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
+                    convo = await provider.watchConversation(TestDataProvider.customer1.address, TestDataProvider.agent2.convo1.address);
 
-                    expect(convo.agentAddress).to.deep.eq(TestDataProvider.AGENT_1_CONVO_1);
+                    expect(convo.agentAddress).to.deep.eq(TestDataProvider.agent1.convo1.address);
                     expect(convo.conversationState).to.eq(ConversationState.Agent);
                     expect(convo.watchingAgents.length).to.eq(2);
-                    expect(convo.watchingAgents).to.deep.include(TestDataProvider.AGENT_1_CONVO_1);
-                    expect(convo.watchingAgents).to.deep.include(TestDataProvider.AGENT_2_CONVO_1);
+                    expect(convo.watchingAgents).to.deep.include(TestDataProvider.agent1.convo1.address);
+                    expect(convo.watchingAgents).to.deep.include(TestDataProvider.agent2.convo1.address);
 
-                    convo = await provider.disconnectCustomerFromAgent(TestDataProvider.CUSTOMER_1, TestDataProvider.AGENT_2_CONVO_1);
-                    expect(convo.agentAddress).not.to.deep.eq(TestDataProvider.AGENT_1_CONVO_1);
+                    convo = await provider.disconnectCustomerFromAgent(TestDataProvider.customer1.address, TestDataProvider.agent2.convo1.address);
+                    expect(convo.agentAddress).not.to.deep.eq(TestDataProvider.agent1.convo1.address);
                     expect(convo.conversationState).to.eq(ConversationState.Bot);
                     expect(convo.watchingAgents.length).to.eq(1);
-                    expect(convo.watchingAgents).to.deep.include(TestDataProvider.AGENT_1_CONVO_1);
+                    expect(convo.watchingAgents).to.deep.include(TestDataProvider.agent1.convo1.address);
                 });
             });
         });

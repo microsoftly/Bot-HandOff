@@ -9,14 +9,14 @@ import { BotAttemptedToRecordMessageWhileAgentHasConnection} from '../../errors/
 import { CustomerAlreadyConnectedException } from '../../errors/CustomerAlreadyConnectedException';
 import { IProvider } from '../../IProvider';
 import { AgentToCustomerConnectionMapper } from './AgentToCustomerConnectionMapper';
-import { Conversation } from './Conversation';
+import { InMemoryConversation } from './InMemoryConversation';
 
 export class InMemoryProvider implements IProvider {
-    private conversations: Map<string, Conversation>;
+    private conversations: Map<string, InMemoryConversation>;
     private agentToCustomerConnectionMapper: AgentToCustomerConnectionMapper;
 
     constructor() {
-        this.conversations = new Map<string, Conversation>();
+        this.conversations = new Map<string, InMemoryConversation>();
         this.agentToCustomerConnectionMapper = new AgentToCustomerConnectionMapper();
     }
 
@@ -164,15 +164,15 @@ export class InMemoryProvider implements IProvider {
         return Promise.resolve(Array.from(this.conversations.values()));
     }
 
-    private getConversationSynchronously(customerAddress: IAddress): Conversation {
+    private getConversationSynchronously(customerAddress: IAddress): InMemoryConversation {
         return this.conversations.get(customerAddress.user.id);
     }
 
-    private getOrCreateNewCustomerConversationSynchronously(customerAddress: IAddress): Conversation {
-        let convo: Conversation = this.conversations.get(customerAddress.user.id);
+    private getOrCreateNewCustomerConversationSynchronously(customerAddress: IAddress): InMemoryConversation {
+        let convo: InMemoryConversation = this.conversations.get(customerAddress.user.id);
 
         if (!convo) {
-            convo = new Conversation(customerAddress);
+            convo = new InMemoryConversation(customerAddress);
             this.conversations.set(customerAddress.user.id, convo);
         }
 

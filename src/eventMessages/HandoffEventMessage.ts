@@ -1,9 +1,8 @@
 import { IAddress, IAttachment, IIdentity, IMessage } from 'botbuilder';
-import { IHandoffMessage } from './../IHandoffMessage';
 import { ErrorEventMessage } from './ErrorEventMessage';
 import { EventMessageType } from './EventMessageType';
 
-export abstract class HandoffEventMessage implements IHandoffMessage {
+export abstract class HandoffEventMessage  {
     public readonly type: EventMessageType;
     public customerAddress: IAddress;
     public agentAddress?: IAddress;

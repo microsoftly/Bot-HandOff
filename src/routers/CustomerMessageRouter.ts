@@ -3,14 +3,23 @@ import { ConversationState, IConversation } from '../IConversation';
 import { IHandoffMessage } from '../IHandoffMessage';
 import { MessageReceivedWhileWaitingHandler } from '../options/MessageReceivedWhileWaitingHandler';
 import { IProvider } from './../provider/IProvider';
-import { Router } from './Router';
+// import { IRouter } from './IRouter';
 
-export class CustomerMessageRouter extends Router {
+export class CustomerMessageRouter {
+    private bot: UniversalBot;
+    private provider: IProvider;
+    private shouldTranscribeMessage: boolean;
     private messageReceivedWhileWaitingHandler: MessageReceivedWhileWaitingHandler;
 
-    constructor(bot: UniversalBot, provider: IProvider, messageReceivedWhileWaitingHandler: MessageReceivedWhileWaitingHandler) {
-        super(bot, provider);
-
+    constructor(
+        bot: UniversalBot,
+        provider: IProvider,
+        shouldTranscribeMessage: boolean,
+        messageReceivedWhileWaitingHandler: MessageReceivedWhileWaitingHandler
+    ) {
+        this.bot = bot;
+        this.provider = provider;
+        this.shouldTranscribeMessage = shouldTranscribeMessage;
         this.messageReceivedWhileWaitingHandler = messageReceivedWhileWaitingHandler;
     }
     //tslint:disable
@@ -23,9 +32,17 @@ export class CustomerMessageRouter extends Router {
         const mirrorMessages = convo.watchingAgents.map(
             (watchingAgentAddress: IAddress) => Object.assign({}, session.message, { address: watchingAgentAddress }));
 
-        await this.provider.addCustomerMessageToTranscript(session.message);
+        if (this.shouldTranscribeMessage) {
+            await this.provider.addCustomerMessageToTranscript(session.message);
+        }
 
         // only send the messages out once they've been successfully recorded in the transcript
         this.bot.send(mirrorMessages);
+
+        if (convo.conversationState === ConversationState.Bot) {
+            next();
+        } else if (convo.conversationState === ConversationState.Wait) {
+            this.messageReceivedWhileWaitingHandler(this.bot, session, next);
+        }
     }
 }

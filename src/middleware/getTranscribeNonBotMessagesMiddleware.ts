@@ -12,10 +12,10 @@ export function getTranscribeNonBotMessagesMiddleware(provider: IProvider): (s: 
     return (session: Session, next: Function) => {
         const message = session.message as IHandoffMessage;
         let transcriptionPromise: Promise<{}> = Promise.resolve({});
-        // TODO can probably safely remove this
-        if (!message.customerAddress && !message.agentAddress) {
-            throw new Error('TranscribeNonBotMessagesMiddleware must be applied after addAddressesForHandoffMessageMiddleware');
-        }
+        // // TODO can probably safely remove this
+        // if (!message.customerAddress && !message.agentAddress) {
+        //     throw new Error('TranscribeNonBotMessagesMiddleware must be applied after addAddressesForHandoffMessageMiddleware');
+        // }
 
         // event messages are not part of a transcript
         if (message.type === 'message') {
