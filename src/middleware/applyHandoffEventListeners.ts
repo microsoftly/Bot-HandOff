@@ -1,4 +1,4 @@
-import * as Promise from 'bluebird';
+// import * as Promise from 'bluebird';
 import { IAddress, Message, UniversalBot } from 'botbuilder';
 import { EventMessageType } from '../eventMessages/EventMessageType';
 import { HandoffEventMessage } from '../eventMessages/HandoffEventMessage';
@@ -69,38 +69,41 @@ class HandoffMessageEventListnerApplicator {
                 this.eventHandlers.unwatch));
     }
 
-    // tslint:disable
     private wrapEventHandlerWithResultPropagator(
-        fn: (msg: HandoffEventMessage) => Promise<any>,
+        fn: (msg: HandoffEventMessage) => Promise<void>,
         eventHandler: IEventHandler
-    ): (msg: HandoffEventMessage) => Promise<any> {
-    // tslint:enable
-        return (msg: HandoffEventMessage) => fn(msg)
-            .then(() => eventHandler.success(this.bot, msg))
-            .catch((e: {}) => eventHandler.failure(this.bot, new ErrorEventMessage(msg, e)));
+    ): (msg: HandoffEventMessage) => Promise<void> {
+        return async (msg: HandoffEventMessage): Promise<void> => {
+            try {
+                await fn(msg);
+                eventHandler.success(this.bot, msg);
+            } catch (err) {
+                eventHandler.failure(this.bot, new ErrorEventMessage(msg, err));
+            }
+        };
     }
 
-    private handleQueueEvent(msg: HandoffEventMessage): Promise<{}> {
-        return this.provider.queueCustomerForAgent(msg.customerAddress);
+    private async handleQueueEvent(msg: HandoffEventMessage): Promise<void> {
+        await this.provider.queueCustomerForAgent(msg.customerAddress);
     }
 
-    private handleDequeueEvent(msg: HandoffEventMessage): Promise<{}> {
-        return this.provider.dequeueCustomerForAgent(msg.customerAddress);
+    private async handleDequeueEvent(msg: HandoffEventMessage): Promise<void> {
+        await this.provider.dequeueCustomerForAgent(msg.customerAddress);
     }
 
-    private handleWatchEvent(msg: HandoffEventMessage): Promise<{}> {
-        return this.provider.watchConversation(msg.customerAddress, msg.agentAddress);
+    private async handleWatchEvent(msg: HandoffEventMessage): Promise<void> {
+        await this.provider.watchConversation(msg.customerAddress, msg.agentAddress);
     }
 
-    private handleUnwatchEvent(msg: HandoffEventMessage): Promise<{}> {
-        return this.provider.unwatchConversation(msg.customerAddress, msg.agentAddress);
+    private async handleUnwatchEvent(msg: HandoffEventMessage): Promise<void> {
+        await this.provider.unwatchConversation(msg.customerAddress, msg.agentAddress);
     }
 
-    private handleConnectEvent(msg: HandoffEventMessage): Promise<{}> {
-        return this.provider.connectCustomerToAgent(msg.customerAddress, msg.agentAddress);
+    private async handleConnectEvent(msg: HandoffEventMessage): Promise<void> {
+        await this.provider.connectCustomerToAgent(msg.customerAddress, msg.agentAddress);
     }
 
-    private handleDisconnectEvent(msg: HandoffEventMessage): Promise<{}> {
-        return this.provider.disconnectCustomerFromAgent(msg.customerAddress, msg.agentAddress);
+    private async handleDisconnectEvent(msg: HandoffEventMessage): Promise<void> {
+        await this.provider.disconnectCustomerFromAgent(msg.customerAddress, msg.agentAddress);
     }
 }

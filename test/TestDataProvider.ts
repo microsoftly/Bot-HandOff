@@ -1,11 +1,11 @@
 import { IAddress, IIdentity, IMessage, Message } from 'botbuilder';
-import { ConnectEventMessage } from '../dist/src/eventMessages/ConnectEventMessage';
-import { DequeueEventMessage } from '../dist/src/eventMessages/DequeueEventMessage';
-import { WatchEventMessage } from '../dist/src/eventMessages/WatchEventMessage';
+import { ConnectEventMessage } from '../src/eventMessages/ConnectEventMessage';
+import { DequeueEventMessage } from '../src/eventMessages/DequeueEventMessage';
 import { DisconnectEventMessage } from '../src/eventMessages/DisconnectEventMessage';
 import { HandoffEventMessage } from '../src/eventMessages/HandoffEventMessage';
 import { QueueEventMessage } from '../src/eventMessages/QueueEventMessage';
 import { UnwatchEventMessage } from '../src/eventMessages/UnwatchEventMessage';
+import { WatchEventMessage } from '../src/eventMessages/WatchEventMessage';
 
 const bot = {
     id: 'bot',
@@ -173,7 +173,7 @@ const AGENT_2_CONVO_2_MESSAGE_3 = new Message()
     .address(AGENT_2_CONVO_2)
     .toMessage();
 
-function getExpectedReceivedMessage(originalMessage: IMessage, expectedAddress: IAddress): IMessage {
+export function getExpectedReceivedMessage(originalMessage: IMessage, expectedAddress: IAddress): IMessage {
     return Object.assign({}, originalMessage, { address: expectedAddress });
 }
 
@@ -266,7 +266,7 @@ export const customer1 = {
     message2: CUSTOMER_1_MESSAGE_2,
     message3: CUSTOMER_1_MESSAGE_3,
 
-    eventMessages: getCustomerEventMessages(CUSTOMER_1)
+    eventMessage: getCustomerEventMessages(CUSTOMER_1)
 };
 
 export const customer2 = {
@@ -278,3 +278,5 @@ export const customer2 = {
 
     eventMessage: getCustomerEventMessages(CUSTOMER_2)
 };
+
+export const unkownError = new Error('an error was thrown');

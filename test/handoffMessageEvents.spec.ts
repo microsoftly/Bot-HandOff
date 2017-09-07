@@ -88,7 +88,7 @@ function createEventHandlerSpies(): IEventHandlers {
 //     expectCallCount(0, ...spies);
 // }
 
-describe('event message', () => {
+xdescribe('event message', () => {
     let bot: UniversalBot;
     let provider: IProvider;
     let eventMessage: HandoffEventMessage;

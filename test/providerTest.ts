@@ -11,7 +11,7 @@ import * as TestDataProvider from './TestDataProvider';
 export function providerTest(getNewProvider: () => $Promise<IProvider>, providerName: string): void {
     let provider: IProvider;
 
-    describe.only(providerName, () => {
+    describe(providerName, () => {
         let convo: IConversation;
         let customer1Convo: IConversation;
         let customer2Convo: IConversation;

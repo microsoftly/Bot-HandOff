@@ -7,6 +7,9 @@
         "sourceMap": true,
         "declaration": true
     },
+    "exclude": [
+        "./dist"
+    ],
     "files": [
         "./src/index.ts",
         "./test/AgentHandoff.spec.ts",
