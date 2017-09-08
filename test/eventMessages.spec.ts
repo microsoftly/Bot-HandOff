@@ -12,7 +12,6 @@ import { EventFailureHandler } from '../src/options/EventFailureHandlers';
 import { EventSuccessHandler } from '../src/options/EventSuccessHandlers';
 import { IEventHandler, IEventHandlers } from '../src/options/IEventHandlers';
 import { IHandoffOptions } from '../src/options/IHandoffOptions';
-import { InMemoryProvider } from '../src/provider/prebuilt/InMemoryProvider';
 import { ConversationState, IConversation } from './../src/IConversation';
 import { AgentNotInConversationError } from './../src/provider/errors/AgentNotInConversationError';
 import { IProvider } from './../src/provider/IProvider';
@@ -61,7 +60,7 @@ describe('event messages', () => {
         const handoffOptions: IHandoffOptions = {};
 
         // provider = new InMemoryProvider();
-        providerSpy = TestDataProvider.createIProviderSpy(); //createIProviderSpy(provider);
+        providerSpy = TestDataProvider.createIProviderMock();
 
         eventHandlerSpies = TestDataProvider.getEventHandlerSpies();
         handoffOptions.eventHandlers = eventHandlerSpies;

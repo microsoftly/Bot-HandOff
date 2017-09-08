@@ -9,7 +9,6 @@ import { QueueEventMessage } from '../src/eventMessages/QueueEventMessage';
 import { IConversation } from '../src/IConversation';
 import { IEventHandlers } from '../src/options/IEventHandlers';
 import { MessageReceivedWhileWaitingHandler } from '../src/options/MessageReceivedWhileWaitingHandler';
-import { InMemoryProvider } from '../src/provider/prebuilt/InMemoryProvider';
 import { applyHandoffMiddleware } from './../src/applyHandoffMiddleware';
 import { ConnectEventMessage } from './../src/eventMessages/ConnectEventMessage';
 import { IProvider } from './../src/provider/IProvider';
@@ -34,7 +33,7 @@ const EVENT_DELAY = 50;
 
 describe('agent handoff', () => {
     let bot: UniversalBot;
-    let provider: IProvider;
+    let providerSpy: IProvider;
     let eventHandlerSpies: IEventHandlers;
     let messageReceivedWhileWaitingSpy: sinon.SinonSpy;
 
@@ -47,14 +46,14 @@ describe('agent handoff', () => {
         messageReceivedWhileWaitingSpy = sinon.spy(messageReceivedWhileWaitingHandler);
 
         eventHandlerSpies = TestDataProvider.getEventHandlerSpies();
-        provider = new InMemoryProvider();
+        providerSpy = TestDataProvider.createIProviderSpy();
         bot = new UniversalBot(connector);
         bot.dialog('/', (session: Session) => {
             session.send(INTRO_TEXT);
         });
 
         applyHandoffMiddleware(
-            bot, isAgent, provider,
+            bot, isAgent, providerSpy,
             { eventHandlers: eventHandlerSpies, messageReceivedWhileWaitingHandler: messageReceivedWhileWaitingSpy });
 
         // all customers should have their intro messages sent first
@@ -78,7 +77,7 @@ describe('agent handoff', () => {
                 TestDataProvider.getExpectedReceivedMessage(TestDataProvider.customer1.message2, TestDataProvider.agent1.convo1.address)
             )
             .runTest()
-            .then(() => provider.getAllConversations())
+            .then(() => providerSpy.getAllConversations())
             .then((convos: IConversation[]) => {
                 convos.forEach((convo: IConversation) => {
                     expect(convo.transcript).not.to.be.empty;
@@ -327,6 +326,7 @@ describe('agent handoff', () => {
         });
     });
 
+    // TODO move these to a different test. Need to also test shouldTranscribe option
     describe('Handoff Options', () => {
         it('calls the MessageReceivedWhileWaitingHandler when in a waiting state', async () => {
             await new BotTester(bot)
@@ -338,5 +338,6 @@ describe('agent handoff', () => {
                 .then(() => expect(messageReceivedWhileWaitingSpy).to.have.been.called)
                 .runTest();
         });
+
     });
 });

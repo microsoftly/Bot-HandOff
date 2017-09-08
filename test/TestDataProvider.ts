@@ -306,8 +306,27 @@ export function getEventHandlerSpies(): IEventHandlers {
 }
 
 export function createIProviderSpy(): IProvider {
-    // just a cheap hack to get the provider shape and class type
+    const provider = new InMemoryProvider();
 
+    provider.addCustomerMessageToTranscript = sinon.spy(provider, 'addCustomerMessageToTranscript');
+    provider.addAgentMessageToTranscript = sinon.spy(provider, 'addAgentMessageToTranscript');
+    provider.addBotMessageToTranscript = sinon.spy(provider, 'addBotMessageToTranscript');
+    provider.addBotMessageToTranscriptIgnoringConversationState = sinon.spy(provider, 'addBotMessageToTranscriptIgnoringConversationState');
+    provider.connectCustomerToAgent = sinon.spy(provider, 'connectCustomerToAgent');
+    provider.disconnectCustomerFromAgent = sinon.spy(provider, 'disconnectCustomerFromAgent');
+    provider.queueCustomerForAgent = sinon.spy(provider, 'queueCustomerForAgent');
+    provider.dequeueCustomerForAgent = sinon.spy(provider, 'dequeueCustomerForAgent');
+    provider.watchConversation = sinon.spy(provider, 'watchConversation');
+    provider.unwatchConversation = sinon.spy(provider, 'unwatchConversation');
+    provider.getConversationFromCustomerAddress = sinon.spy(provider, 'getConversationFromCustomerAddress');
+    provider.getOrCreateNewCustomerConversation = sinon.spy(provider, 'getOrCreateNewCustomerConversation');
+    provider.getConversationFromAgentAddress = sinon.spy(provider, 'getConversationFromAgentAddress');
+    provider.getAllConversations = sinon.spy(provider, 'getAllConversations');
+
+    return provider;
+}
+
+export function createIProviderMock(): IProvider {
     const provider = new InMemoryProvider();
 
     provider.addCustomerMessageToTranscript = sinon.mock(provider).expects('addCustomerMessageToTranscript');
