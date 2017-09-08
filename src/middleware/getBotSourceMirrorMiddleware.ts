@@ -4,10 +4,10 @@ import { sendMirrorMessages } from '../utils';
 import { IProvider } from './../provider/IProvider';
 
 /**
- * mirrors messages sent to the customer, whether they be from the bot or agents.
+ * mirrors messages sent to the customer to a watching agent, whether they be from the bot or agents.
  * @param provider data provider for transcription services
  */
-export function getBotMirrorMiddleware(bot: UniversalBot, provider: IProvider): (s: IMessage, n: Function) => Promise<void> {
+export function getBotSourceMirrorMiddleware(bot: UniversalBot, provider: IProvider): (s: IMessage, n: Function) => Promise<void> {
     return async (message: IMessage, next: Function): Promise<void> => {
         const convo = await provider.getOrCreateNewCustomerConversation(message.address);
 

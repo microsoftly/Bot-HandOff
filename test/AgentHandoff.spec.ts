@@ -39,9 +39,11 @@ describe('agent handoff', () => {
     let messageReceivedWhileWaitingSpy: sinon.SinonSpy;
 
     beforeEach(async () => {
+        // this is a hack to work with the bot tester framework (not just end up hanging). This is likely not a good example implementation
         const messageReceivedWhileWaitingHandler = (b: UniversalBot, s: Session, next: Function) => {
             next();
         };
+
         messageReceivedWhileWaitingSpy = sinon.spy(messageReceivedWhileWaitingHandler);
 
         eventHandlerSpies = TestDataProvider.getEventHandlerSpies();

@@ -1,7 +1,6 @@
 import { IAddress, IIdentity, IMessage } from 'botbuilder';
 import { isEqual, isMatch, remove } from 'lodash';
 import { ConversationState, IConversation, ITranscriptLine } from '../../../IConversation';
-// import { IHandoffMessage } from '../../../IHandoffMessage';
 
 export class InMemoryConversation implements IConversation {
     public readonly customerAddress: IAddress;

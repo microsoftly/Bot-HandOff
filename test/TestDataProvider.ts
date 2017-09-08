@@ -1,5 +1,6 @@
 import { IAddress, IIdentity, IMessage, Message } from 'botbuilder';
 import * as sinon from 'sinon';
+import { InMemoryProvider } from '../dist/src/provider/prebuilt/InMemoryProvider';
 import { ConnectEventMessage } from '../src/eventMessages/ConnectEventMessage';
 import { DequeueEventMessage } from '../src/eventMessages/DequeueEventMessage';
 import { DisconnectEventMessage } from '../src/eventMessages/DisconnectEventMessage';
@@ -10,6 +11,7 @@ import { WatchEventMessage } from '../src/eventMessages/WatchEventMessage';
 import { EventFailureHandler } from '../src/options/EventFailureHandlers';
 import { EventSuccessHandler } from '../src/options/EventSuccessHandlers';
 import { IEventHandler, IEventHandlers } from '../src/options/IEventHandlers';
+import { IProvider } from '../src/provider/IProvider';
 
 const bot = {
     id: 'bot',
@@ -301,4 +303,28 @@ export function getEventHandlerSpies(): IEventHandlers {
         watch: createEventHandlerSpy(),
         unwatch: createEventHandlerSpy()
     };
+}
+
+export function createIProviderSpy(): IProvider {
+    // just a cheap hack to get the provider shape and class type
+
+    const provider = new InMemoryProvider();
+
+    provider.addCustomerMessageToTranscript = sinon.mock(provider).expects('addCustomerMessageToTranscript');
+    provider.addAgentMessageToTranscript = sinon.mock(provider).expects('addAgentMessageToTranscript');
+    provider.addBotMessageToTranscript = sinon.mock(provider).expects('addBotMessageToTranscript');
+    provider.addBotMessageToTranscriptIgnoringConversationState =
+        sinon.mock(provider).expects('addBotMessageToTranscriptIgnoringConversationState');
+    provider.connectCustomerToAgent = sinon.mock(provider).expects('connectCustomerToAgent');
+    provider.disconnectCustomerFromAgent = sinon.mock(provider).expects('disconnectCustomerFromAgent');
+    provider.queueCustomerForAgent = sinon.mock(provider).expects('queueCustomerForAgent');
+    provider.dequeueCustomerForAgent = sinon.mock(provider).expects('dequeueCustomerForAgent');
+    provider.watchConversation = sinon.mock(provider).expects('watchConversation');
+    provider.unwatchConversation = sinon.mock(provider).expects('unwatchConversation');
+    provider.getConversationFromCustomerAddress = sinon.mock(provider).expects('getConversationFromCustomerAddress');
+    provider.getOrCreateNewCustomerConversation = sinon.mock(provider).expects('getOrCreateNewCustomerConversation');
+    provider.getConversationFromAgentAddress = sinon.mock(provider).expects('getConversationFromAgentAddress');
+    provider.getAllConversations = sinon.mock(provider).expects('getAllConversations');
+
+    return provider;
 }

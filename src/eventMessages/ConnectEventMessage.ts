@@ -1,5 +1,4 @@
 import { IAddress } from 'botbuilder';
-import { ErrorEventMessage } from './ErrorEventMessage';
 import { EventMessageType } from './EventMessageType';
 import { HandoffEventMessage } from './HandoffEventMessage';
 

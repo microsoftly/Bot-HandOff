@@ -1,6 +1,6 @@
 // import * as $Promise from 'bluebird';
 import { BotTester } from 'bot-tester';
-import { ConsoleConnector, IAddress, IMessage, Message, Session, UniversalBot } from 'botbuilder';
+import { ConsoleConnector, IAddress, IMessage, Session, UniversalBot } from 'botbuilder';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
@@ -15,9 +15,6 @@ import { IHandoffOptions } from '../src/options/IHandoffOptions';
 import { InMemoryProvider } from '../src/provider/prebuilt/InMemoryProvider';
 import { ConversationState, IConversation } from './../src/IConversation';
 import { AgentNotInConversationError } from './../src/provider/errors/AgentNotInConversationError';
-import {
-    BotAttemptedToRecordMessageWhileAgentHasConnection
-} from './../src/provider/errors/BotAttemptedToRecordMessageWhileAgentHasConnection';
 import { IProvider } from './../src/provider/IProvider';
 import * as TestDataProvider from './TestDataProvider';
 
@@ -27,74 +24,25 @@ const expect = chai.expect;
 
 const connector = new ConsoleConnector();
 
-function getEchoMessage(originalMessage: string | IMessage, addr?: IAddress): IMessage {
-    const text: string = typeof originalMessage === 'string' ? originalMessage : originalMessage.text;
-    const address: IAddress = addr || (originalMessage as IMessage).address;
-
-    return new Message()
-        .text(`Echo ${text}`)
-        .address(address)
-        .toMessage();
-}
-
 const isAgent = (session: Session): Promise<boolean> => {
     return Promise.resolve(session.message.address.user.name.toLowerCase().includes('agent'));
 };
 
-function createIProviderSpy(provider: IProvider): IProvider {
-    provider.addCustomerMessageToTranscript = sinon.mock();
-    provider.addAgentMessageToTranscript = sinon.mock();
-    provider.addBotMessageToTranscript = sinon.mock();
-    provider.addBotMessageToTranscriptIgnoringConversationState = sinon.mock();
-    provider.connectCustomerToAgent = sinon.mock();
-    provider.disconnectCustomerFromAgent = sinon.mock();
-    provider.queueCustomerForAgent = sinon.mock();
-    provider.dequeueCustomerForAgent = sinon.mock();
-    provider.watchConversation = sinon.mock();
-    provider.unwatchConversation = sinon.mock();
-    provider.getConversationFromCustomerAddress = sinon.mock();
-    provider.getOrCreateNewCustomerConversation = sinon.mock();
-    provider.getConversationFromAgentAddress = sinon.mock();
-    provider.getAllConversations = sinon.mock();
-
-    return provider;
-}
-
-describe('event messages', () => {
+describe.only('event messages', () => {
     let bot: UniversalBot;
-    let provider: IProvider;
     let eventHandlerSpies: IEventHandlers;
     let providerSpy: IProvider;
 
     // resolves when the error is thrown. Needs to be called before the desired rejected call is made
     function rejectProviderFunction(functionName: string): Promise<{}> {
-        const functionMock = providerSpy[functionName] = sinon.mock();
-
         return new Promise((res: Function) => {
-            functionMock.callsFake(() => {
+            (providerSpy[functionName] as sinon.SinonExpectation).callsFake(() => {
                 res();
 
                 return Promise.reject(TestDataProvider.unkownError);
             });
         });
     }
-
-    beforeEach(() => {
-        const handoffOptions: IHandoffOptions = {};
-
-        provider = new InMemoryProvider();
-        providerSpy = createIProviderSpy(provider);
-
-        eventHandlerSpies = TestDataProvider.getEventHandlerSpies();
-        handoffOptions.eventHandlers = eventHandlerSpies;
-        bot = new UniversalBot(connector);
-
-        bot.dialog('/', (session: Session) => {
-            session.send(getEchoMessage(session.message));
-        });
-
-        applyHandoffMiddleware(bot, isAgent, providerSpy, handoffOptions);
-    });
 
     async function mockSuccesfulProviderCall(functionName: string, customer1EventMessage: HandoffEventMessage): Promise<void> {
         const callPromise = new Promise((res: Function) => {
@@ -108,6 +56,23 @@ describe('event messages', () => {
             .then(() => callPromise)
             .runTest();
     }
+
+    beforeEach(() => {
+        const handoffOptions: IHandoffOptions = {};
+
+        // provider = new InMemoryProvider();
+        providerSpy = TestDataProvider.createIProviderSpy(); //createIProviderSpy(provider);
+
+        eventHandlerSpies = TestDataProvider.getEventHandlerSpies();
+        handoffOptions.eventHandlers = eventHandlerSpies;
+        bot = new UniversalBot(connector);
+
+        bot.dialog('/', (session: Session) => {
+            session.send('this message does not matter for this test');
+        });
+
+        applyHandoffMiddleware(bot, isAgent, providerSpy, handoffOptions);
+    });
 
     describe('queue', () => {
         beforeEach(async () => await mockSuccesfulProviderCall('queueCustomerForAgent', TestDataProvider.customer1.eventMessage.toQueue));
@@ -265,137 +230,4 @@ describe('event messages', () => {
         });
 
     });
-    // describe('watch/unwatch', () => {
-    //     beforeEach(async () => {
-    //         convo = await provider.watchConversation(TestDataProvider.customer1.address, TestDataProvider.AGENT_1_CONVO_1);
-    //     });
-
-    //     it('watch does not affect conversation state', () => {
-    //         expect(convo.conversationState).to.eq(ConversationState.Bot);
-    //     });
-
-    //     it('watch adds the agent address to the watching agents collection', () => {
-    //         expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
-    //     });
-
-    //     it('multiple agents can watch a single conversation', async () => {
-    //         convo = await provider.watchConversation(TestDataProvider.customer1.address, TestDataProvider.AGENT_2_CONVO_1);
-
-    //         expect(convo.watchingAgents.length).to.eq(2);
-    //         expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
-    //         expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_2_CONVO_1);
-    //     });
-
-    //     it('multiple agents can watch multiple conversations', async () => {
-    //         const convo2 = await provider.watchConversation(TestDataProvider.customer2.address, TestDataProvider.AGENT_1_CONVO_2);
-
-    //         expect(convo.watchingAgents.length).to.eq(1);
-    //         expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
-
-    //         expect(convo2.watchingAgents.length).to.eq(1);
-    //         expect(convo2.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_2);
-
-    //     });
-
-    //     describe('unwatch', () => {
-    //         beforeEach(async () => {
-    //             convo = await provider.unwatchConversation(TestDataProvider.customer1.address, TestDataProvider.AGENT_1_CONVO_1);
-    //         });
-
-    //         it('removes the agent from the watching agents collection', () => {
-    //             expect(convo.watchingAgents).not.to.include(TestDataProvider.AGENT_1_CONVO_1);
-    //         });
-
-    //         it('does not affect other agents in watch list', async () => {
-    //             await provider.watchConversation(TestDataProvider.customer1.address, TestDataProvider.AGENT_2_CONVO_1);
-    //             convo = await provider.unwatchConversation(TestDataProvider.customer1.address, TestDataProvider.AGENT_1_CONVO_1);
-
-    //             expect(convo.watchingAgents.length).to.eq(1);
-    //             expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_2_CONVO_1);
-    //         });
-
-    //         it('does not affect other conversations with other customers', async () => {
-    //             await provider.watchConversation(TestDataProvider.customer2.address, TestDataProvider.AGENT_1_CONVO_1);
-    //             await provider.unwatchConversation(TestDataProvider.customer1.address, TestDataProvider.AGENT_1_CONVO_2);
-    //             convo = await provider.getConversationFromCustomerAddress(TestDataProvider.customer2.address);
-
-    //             expect(convo.watchingAgents.length).to.eq(1);
-    //         });
-    //     });
-    // });
-
-    // describe('connect/disconnect', () => {
-    //     beforeEach(async () => {
-    //         convo = await provider.connectCustomerToAgent(TestDataProvider.customer1.address, TestDataProvider.AGENT_1_CONVO_1);
-    //     });
-
-    //     it('sets conversation state to agent', () => {
-    //         expect(convo.conversationState).to.eq(ConversationState.Agent);
-    //     });
-
-    //     it('adds the agent address to the watching agent list', () => {
-    //         expect(convo.watchingAgents).to.include(TestDataProvider.AGENT_1_CONVO_1);
-    //     });
-
-    //     it('sets agentAddress on conversation', () => {
-    //         expect(convo.agentAddress).to.eq(TestDataProvider.AGENT_1_CONVO_1);
-    //     });
-
-    //     it('agent messages are transcribed to the connected customer conversation', async () => {
-    //         await provider.addAgentMessageToTranscript(TestDataProvider.AGENT_1_CONVO_1_MESSAGE_1);
-
-    //         convo = await provider.getConversationFromAgentAddress(TestDataProvider.AGENT_1_CONVO_1);
-
-    //         expect(convo.transcript.length).to.eq(2);
-    //     });
-
-    //     it('throws an error if a bot message is recorded while agent-customer connection is established', () => {
-    //         // can pass in any message for customer 1 for this to work
-    //         return provider.addBotMessageToTranscript(TestDataProvider.customer1.message1)
-    //             .then(() => expect.fail('should have thrown an error'))
-    //             .catch((e: Error) => expect(e).to.be.instanceOf(BotAttemptedToRecordMessageWhileAgentHasConnection));
-    //     });
-
-    //     describe('disconnect', () => {
-    //         beforeEach(async () => {
-    //             convo = await provider.disconnectCustomerFromAgent(TestDataProvider.customer1.address, TestDataProvider.AGENT_1_CONVO_1);
-    //         });
-
-    //         it('sets conversation state to bot', () => {
-    //             expect(convo.conversationState).to.eq(ConversationState.Bot);
-    //         });
-
-    //         it('unsets agentAddress', () => {
-    //             expect(convo.agentAddress).to.be.undefined;
-    //         });
-
-    //         it('removes agent from watching agent collection', () => {
-    //             expect(convo.watchingAgents.length).to.eq(0);
-    //         });
-
-    //         it('throws not connected error if the agent not connected and agent transcription attempt occurs', () => {
-    //             // as long as the messsage is sourced from agent 2, this is good
-    //             return provider.addAgentMessageToTranscript(TestDataProvider.AGENT_2_CONVO_1_MESSAGE_1)
-    //                 .then(() => expect.fail('should throw an AgentNotInConversationError'))
-    //                 .catch((e: Error) => expect(e).to.be.instanceOf(AgentNotInConversationError));
-    //         });
-
-    //         it('does not affect other watching agents', async () => {
-    //             await provider.connectCustomerToAgent(TestDataProvider.customer1.address, TestDataProvider.AGENT_1_CONVO_1);
-    //             convo = await provider.watchConversation(TestDataProvider.customer1.address, TestDataProvider.AGENT_2_CONVO_1);
-
-    //             expect(convo.agentAddress).to.deep.eq(TestDataProvider.AGENT_1_CONVO_1);
-    //             expect(convo.conversationState).to.eq(ConversationState.Agent);
-    //             expect(convo.watchingAgents.length).to.eq(2);
-    //             expect(convo.watchingAgents).to.deep.include(TestDataProvider.AGENT_1_CONVO_1);
-    //             expect(convo.watchingAgents).to.deep.include(TestDataProvider.AGENT_2_CONVO_1);
-
-    //             convo = await provider.disconnectCustomerFromAgent(TestDataProvider.customer1.address, TestDataProvider.AGENT_2_CONVO_1);
-    //             expect(convo.agentAddress).not.to.deep.eq(TestDataProvider.AGENT_1_CONVO_1);
-    //             expect(convo.conversationState).to.eq(ConversationState.Bot);
-    //             expect(convo.watchingAgents.length).to.eq(1);
-    //             expect(convo.watchingAgents).to.deep.include(TestDataProvider.AGENT_1_CONVO_1);
-    //         });
-    //     });
-    // });
 });

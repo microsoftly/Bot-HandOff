@@ -21,26 +21,3 @@ export interface IConversation {
     conversationState: ConversationState;
     transcript: ITranscriptLine[];
 }
-
-// export class Conversation implements IConversation {
-//     public readonly customerAddress: IAddress;
-//     public readonly watchingAgents: IAddress[];
-//     public readonly transcript: ITranscriptLine[];
-//     public agentAddress?: IAddress;
-//     public conversationState: ConversationState;
-
-//     constructor(customerAddress: IAddress) {
-//         this.customerAddress = customerAddress;
-//         this.watchingAgents = [];
-//         this.transcript = [];
-//     }
-// }
-
-// export function createDefaultConversation(customerAddress: IAddress): IConversation {
-//     return {
-//         customerAddress,
-//         conversationState: ConversationState.Bot,
-//         watchingAgents: [],
-//         transcript: []
-//     };
-// }

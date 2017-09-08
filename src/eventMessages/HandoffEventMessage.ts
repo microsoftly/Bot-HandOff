@@ -1,4 +1,4 @@
-import { IAddress, IAttachment, IIdentity, IMessage } from 'botbuilder';
+import { IAddress, IIdentity, IMessage } from 'botbuilder';
 import { ErrorEventMessage } from './ErrorEventMessage';
 import { EventMessageType } from './EventMessageType';
 
