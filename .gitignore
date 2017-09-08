@@ -6,3 +6,4 @@ example/.vscode/launch.json
 .nyc*
 coverage
 yarn-error.log
+bot-tester.json
