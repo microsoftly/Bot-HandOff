@@ -11,7 +11,7 @@
     "build": "node_modules/.bin/tsc",
     "clean": "rm -rf dist",
     "cleanBuild": "npm run clean && npm run build",
-    "nodewatch": "nodemon dist/index.js",
+    "lint": "tslint src/**/*.ts && tslint test/**/*.spec.ts",
     "start": "node dist/index.js",
     "test": "node_modules/.bin/_mocha",
     "coverageTests": "nyc node_modules/.bin/_mocha --require source-map-support/register",
@@ -66,7 +66,7 @@
     "@types/node": "^6.0.59",
     "@types/sinon": "^2.3.3",
     "@types/sinon-chai": "^2.7.28",
-    "bot-tester": "^2.0.1",
+    "bot-tester": "^3.0.0",
     "chai": "^4.1.0",
     "chai-as-promised": "^7.1.1",
     "coveralls": "^2.13.1",
@@ -78,6 +78,6 @@
     "sinon-chai": "^2.12.0",
     "source-map-support": "^0.4.16",
     "ts-node": "^3.3.0",
-    "tslint": "^5.6.0"
+    "tslint": "^5.7.0"
   }
 }

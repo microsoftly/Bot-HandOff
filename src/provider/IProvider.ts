@@ -1,4 +1,4 @@
-import * as Promise from 'bluebird';
+// import * as Promise from 'bluebird';
 import { IAddress, IMessage } from 'botbuilder';
 import { IConversation } from '../IConversation';
 // import { IHandoffMessage } from './../IHandoffMessage';

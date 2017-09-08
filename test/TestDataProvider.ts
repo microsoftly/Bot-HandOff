@@ -1,4 +1,5 @@
 import { IAddress, IIdentity, IMessage, Message } from 'botbuilder';
+import * as sinon from 'sinon';
 import { ConnectEventMessage } from '../src/eventMessages/ConnectEventMessage';
 import { DequeueEventMessage } from '../src/eventMessages/DequeueEventMessage';
 import { DisconnectEventMessage } from '../src/eventMessages/DisconnectEventMessage';
@@ -6,6 +7,9 @@ import { HandoffEventMessage } from '../src/eventMessages/HandoffEventMessage';
 import { QueueEventMessage } from '../src/eventMessages/QueueEventMessage';
 import { UnwatchEventMessage } from '../src/eventMessages/UnwatchEventMessage';
 import { WatchEventMessage } from '../src/eventMessages/WatchEventMessage';
+import { EventFailureHandler } from '../src/options/EventFailureHandlers';
+import { EventSuccessHandler } from '../src/options/EventSuccessHandlers';
+import { IEventHandler, IEventHandlers } from '../src/options/IEventHandlers';
 
 const bot = {
     id: 'bot',
@@ -280,3 +284,21 @@ export const customer2 = {
 };
 
 export const unkownError = new Error('an error was thrown');
+
+function createEventHandlerSpy(): IEventHandler {
+    return {
+        success: sinon.spy() as EventSuccessHandler,
+        failure: sinon.spy() as EventFailureHandler
+    };
+}
+
+export function getEventHandlerSpies(): IEventHandlers {
+    return {
+        connect: createEventHandlerSpy(),
+        disconnect: createEventHandlerSpy(),
+        queue: createEventHandlerSpy(),
+        dequeue: createEventHandlerSpy(),
+        watch: createEventHandlerSpy(),
+        unwatch: createEventHandlerSpy()
+    };
+}

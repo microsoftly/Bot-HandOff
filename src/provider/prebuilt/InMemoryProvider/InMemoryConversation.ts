@@ -1,7 +1,7 @@
 import { IAddress, IIdentity, IMessage } from 'botbuilder';
 import { isEqual, isMatch, remove } from 'lodash';
 import { ConversationState, IConversation, ITranscriptLine } from '../../../IConversation';
-import { IHandoffMessage } from '../../../IHandoffMessage';
+// import { IHandoffMessage } from '../../../IHandoffMessage';
 
 export class InMemoryConversation implements IConversation {
     public readonly customerAddress: IAddress;
@@ -69,14 +69,14 @@ export class InMemoryConversation implements IConversation {
         return isMatch(agentAddress, this.agentAddress);
     }
 
-    public addCustomerMessage(message: IHandoffMessage): void {
+    public addCustomerMessage(message: IMessage): void {
         const to = this.conversationState === ConversationState.Agent ? this.agentAddress.user : message.address.bot;
         const from = message.address.user;
 
         this.addTranscriptLine(message, to, from);
     }
 
-    public addBotMessage(message: IHandoffMessage): void {
+    public addBotMessage(message: IMessage): void {
         // if for whatever reason the bot starts sending messages to the agents, the message's address will always represent the correct
         // destination for bot messages
         const to = message.address.user;
@@ -85,14 +85,14 @@ export class InMemoryConversation implements IConversation {
         this.addTranscriptLine(message, to, from);
     }
 
-    public addAgentMessage(message: IHandoffMessage): void {
+    public addAgentMessage(message: IMessage): void {
         const to = this.customerAddress.user;
         const from = this.agentAddress.user;
 
         this.addTranscriptLine(message, to, from);
     }
 
-    private addTranscriptLine(message: IHandoffMessage, to: IIdentity, from: IIdentity): void {
+    private addTranscriptLine(message: IMessage, to: IIdentity, from: IIdentity): void {
         const newLine = Object.assign({ to, from }, message);
 
         this.transcript.push(newLine);

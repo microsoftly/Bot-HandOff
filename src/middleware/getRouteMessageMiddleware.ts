@@ -1,8 +1,7 @@
 import { Session } from 'botbuilder';
-import { MessageReceivedWhileWaitingHandler } from '../options/MessageReceivedWhileWaitingHandler';
 import { AgentMessageRouter } from '../routers/AgentMessageRouter';
 import { CustomerMessageRouter } from '../routers/CustomerMessageRouter';
-import { IHandoffMessage } from './../IHandoffMessage';
+// import { IHandoffMessage } from './../IHandoffMessage';
 
 /**
  * returns the middleware that selects which route to send the message through: customer or agent

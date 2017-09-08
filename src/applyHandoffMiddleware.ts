@@ -1,6 +1,7 @@
 import * as $Promise from 'bluebird';
 import { Session, UniversalBot } from 'botbuilder';
 import { applyHandoffEventListeners } from './middleware/applyHandoffEventListeners';
+import { getBotMirrorMiddleware } from './middleware/getBotMirrorMessageMiddleware';
 // import { getAddAddressesForHandoffMessageMiddleware } from './middleware/getAddAddressesForHandoffMessageMiddleware';
 import { getRouteMessgeMiddleware } from './middleware/getRouteMessageMiddleware';
 import { getTranscribeBotMessagesMiddleware } from './middleware/getTranscribeBotMessagesMiddleware';
@@ -37,7 +38,9 @@ export function applyHandoffMiddleware(
             new CustomerMessageRouter(bot, provider, options.shouldTranscribeMessages, options.messageReceivedWhileWaitingHandler),
             new AgentMessageRouter(bot, provider, options.shouldTranscribeMessages)));
 
-    const send = [];
+    const send = [
+        getBotMirrorMiddleware(bot, provider)
+    ];
 
     if (options.shouldTranscribeMessages) {
         send.push(getTranscribeBotMessagesMiddleware(provider));

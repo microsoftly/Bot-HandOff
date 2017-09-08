@@ -1,4 +1,4 @@
-import * as Promise from 'bluebird';
+// import * as Promise from 'bluebird';
 import { IAddress, IMessage } from 'botbuilder';
 import * as _ from 'lodash';
 import { ConversationState, IConversation} from '../../../IConversation';

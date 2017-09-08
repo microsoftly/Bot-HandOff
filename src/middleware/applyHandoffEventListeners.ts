@@ -1,4 +1,4 @@
-// import * as Promise from 'bluebird';
+// import * as $Promise from 'bluebird';
 import { IAddress, Message, UniversalBot } from 'botbuilder';
 import { EventMessageType } from '../eventMessages/EventMessageType';
 import { HandoffEventMessage } from '../eventMessages/HandoffEventMessage';
@@ -73,13 +73,14 @@ class HandoffMessageEventListnerApplicator {
         fn: (msg: HandoffEventMessage) => Promise<void>,
         eventHandler: IEventHandler
     ): (msg: HandoffEventMessage) => Promise<void> {
-        return async (msg: HandoffEventMessage): Promise<void> => {
-            try {
-                await fn(msg);
-                eventHandler.success(this.bot, msg);
-            } catch (err) {
-                eventHandler.failure(this.bot, new ErrorEventMessage(msg, err));
-            }
+        return (msg: HandoffEventMessage): Promise<void> => {
+            return fn(msg)
+                .then(() => {
+                    eventHandler.success(this.bot, msg);
+                })
+                .catch((err: Error) => {
+                    eventHandler.failure(this.bot, new ErrorEventMessage(msg, err));
+                });
         };
     }
 

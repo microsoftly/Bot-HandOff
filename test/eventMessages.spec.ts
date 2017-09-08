@@ -1,4 +1,4 @@
-import * as $Promise from 'bluebird';
+// import * as $Promise from 'bluebird';
 import { BotTester } from 'bot-tester';
 import { ConsoleConnector, IAddress, IMessage, Message, Session, UniversalBot } from 'botbuilder';
 import * as chai from 'chai';
@@ -41,26 +41,6 @@ const isAgent = (session: Session): Promise<boolean> => {
     return Promise.resolve(session.message.address.user.name.toLowerCase().includes('agent'));
 };
 
-// //tslint:disable
-// function createIProviderOfStubs(provider: IProvider): IProvider {
-//     Object.getOwnPropertyNames(Object.getPrototypeOf(provider)).forEach((method: string) => {
-//         provider[method] = sinon.stub(provider, method as any).callThrough();
-//     });
-
-//     return provider;
-// }
-// //tslint:enable
-
-
-//tslint:disable
-function createIProviderSpyz(provider: IProvider): IProvider {
-    Object.getOwnPropertyNames(Object.getPrototypeOf(provider)).forEach((method: string) => {
-        provider[method] = sinon.spy(provider, method as any);
-    });
-
-    return provider;
-}
-
 function createIProviderSpy(provider: IProvider): IProvider {
     provider.addCustomerMessageToTranscript = sinon.mock();
     provider.addAgentMessageToTranscript = sinon.mock();
@@ -78,25 +58,6 @@ function createIProviderSpy(provider: IProvider): IProvider {
     provider.getAllConversations = sinon.mock();
 
     return provider;
-}
-//tslint:enable
-
-function createEventHandlerSpy(): IEventHandler {
-    return {
-        success: sinon.spy() as EventSuccessHandler,
-        failure: sinon.spy() as EventFailureHandler
-    };
-}
-
-function createEventHandlerSpies(): IEventHandlers {
-    return {
-        connect: createEventHandlerSpy(),
-        disconnect: createEventHandlerSpy(),
-        queue: createEventHandlerSpy(),
-        dequeue: createEventHandlerSpy(),
-        watch: createEventHandlerSpy(),
-        unwatch: createEventHandlerSpy()
-    };
 }
 
 describe('event messages', () => {
@@ -118,13 +79,13 @@ describe('event messages', () => {
         });
     }
 
-    beforeEach(async () => {
+    beforeEach(() => {
         const handoffOptions: IHandoffOptions = {};
 
         provider = new InMemoryProvider();
         providerSpy = createIProviderSpy(provider);
 
-        eventHandlerSpies = createEventHandlerSpies();
+        eventHandlerSpies = TestDataProvider.getEventHandlerSpies();
         handoffOptions.eventHandlers = eventHandlerSpies;
         bot = new UniversalBot(connector);
 
@@ -133,29 +94,16 @@ describe('event messages', () => {
         });
 
         applyHandoffMiddleware(bot, isAgent, providerSpy, handoffOptions);
-
-        // await new BotTester(bot, TestDataProvider.customer1.address)
-        //     .sendMessageToBot(TestDataProvider.customer1.message1, getEchoMessage(TestDataProvider.customer1.message1))
-        //     .sendMessageToBot(
-        //         TestDataProvider.customer2.message2,
-        //         getEchoMessage(TestDataProvider.customer2.message2, TestDataProvider.customer2.address))
-        //     .runTest();
     });
 
     async function mockSuccesfulProviderCall(functionName: string, customer1EventMessage: HandoffEventMessage): Promise<void> {
         const callPromise = new Promise((res: Function) => {
-            if (!provider[functionName]) {
-                console.log(functionName);
-            }
-            (provider[functionName] as sinon.SinonExpectation).callsFake(() => {
+            (providerSpy[functionName] as sinon.SinonExpectation).callsFake(() => {
                 res();
             });
-            // functionMock.callsFake(() => {
-            //     res();
-            // });
         });
 
-        await new BotTester(bot, TestDataProvider.customer1.address)
+        await new BotTester(bot)
             .sendMessageToBot(customer1EventMessage)
             .then(() => callPromise)
             .runTest();
@@ -218,16 +166,16 @@ describe('event messages', () => {
 
     describe('connect', () => {
         beforeEach(async () =>
-        await mockSuccesfulProviderCall('connectCustomerToAgent', TestDataProvider.agent1.convo1.eventMessage.toConnectTo.customer1));
+            await mockSuccesfulProviderCall('connectCustomerToAgent', TestDataProvider.agent1.convo1.eventMessage.toConnectTo.customer1));
 
         it('calls provider.connectCustomerToAgent', () => {
-        expect(providerSpy.connectCustomerToAgent)
-            .to.have.been.calledWith(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
+            expect(providerSpy.connectCustomerToAgent)
+                .to.have.been.calledWith(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
         });
 
-        it('calls the watch event success handler when successful', () => {
-        expect(eventHandlerSpies.connect.success)
-            .to.have.been.calledWith(bot, TestDataProvider.agent1.convo1.eventMessage.toConnectTo.customer1);
+        it('calls the connect event success handler when successful', () => {
+            expect(eventHandlerSpies.connect.success)
+                .to.have.been.calledWith(bot, TestDataProvider.agent1.convo1.eventMessage.toConnectTo.customer1);
         });
     });
 
@@ -243,7 +191,7 @@ describe('event messages', () => {
             .to.have.been.calledWith(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
         });
 
-        it('calls the watch event success handler when successful', () => {
+        it('calls the disconnect event success handler when successful', () => {
         expect(eventHandlerSpies.disconnect.success)
             .to.have.been.calledWith(bot, TestDataProvider.agent1.convo1.eventMessage.toDisconnectFrom.customer1);
         });
@@ -253,7 +201,7 @@ describe('event messages', () => {
         it('calls the watch failure handler for watch failures', async () => {
             const rejectionIsThrownPromise = rejectProviderFunction('watchConversation');
 
-            await new BotTester(bot, TestDataProvider.customer2.address)
+            await new BotTester(bot)
                 .sendMessageToBot(TestDataProvider.agent1.convo1.eventMessage.toWatch.customer1)
                 .then(() => rejectionIsThrownPromise)
                 .runTest();
@@ -264,7 +212,7 @@ describe('event messages', () => {
         it('calls the unwatch failure handler for watch failures', async () => {
             const rejectionIsThrownPromise = rejectProviderFunction('unwatchConversation');
 
-            await new BotTester(bot, TestDataProvider.customer2.address)
+            await new BotTester(bot)
                 .sendMessageToBot(TestDataProvider.agent1.convo1.eventMessage.toUnwatch.customer1)
                 .then(() => rejectionIsThrownPromise)
                 .runTest();
@@ -275,7 +223,7 @@ describe('event messages', () => {
         it('calls the connect failure handler for connect failures', async () => {
             const rejectionIsThrownPromise = rejectProviderFunction('connectCustomerToAgent');
 
-            await new BotTester(bot, TestDataProvider.customer2.address)
+            await new BotTester(bot)
                 .sendMessageToBot(TestDataProvider.agent1.convo1.eventMessage.toConnectTo.customer1)
                 .then(() => rejectionIsThrownPromise)
                 .runTest();
@@ -286,7 +234,7 @@ describe('event messages', () => {
         it('calls the disconnect failure handler for disconnect failures', async () => {
             const rejectionIsThrownPromise = rejectProviderFunction('disconnectCustomerFromAgent');
 
-            await new BotTester(bot, TestDataProvider.customer2.address)
+            await new BotTester(bot)
                 .sendMessageToBot(TestDataProvider.agent1.convo1.eventMessage.toDisconnectFrom.customer1)
                 .then(() => rejectionIsThrownPromise)
                 .runTest();
@@ -297,7 +245,7 @@ describe('event messages', () => {
         it('calls the queue failure handler for queue failures', async () => {
             const rejectionIsThrownPromise = rejectProviderFunction('queueCustomerForAgent');
 
-            await new BotTester(bot, TestDataProvider.customer2.address)
+            await new BotTester(bot)
             .sendMessageToBot(TestDataProvider.customer1.eventMessage.toQueue)
                 .then(() => rejectionIsThrownPromise)
                 .runTest();
@@ -308,7 +256,7 @@ describe('event messages', () => {
         it('calls the dequeue failure handler for dequeue failures', async () => {
             const rejectionIsThrownPromise = rejectProviderFunction('dequeueCustomerForAgent');
 
-            await new BotTester(bot, TestDataProvider.customer2.address)
+            await new BotTester(bot)
                 .sendMessageToBot(TestDataProvider.customer1.eventMessage.toDequeue)
                 .then(() => rejectionIsThrownPromise)
                 .runTest();

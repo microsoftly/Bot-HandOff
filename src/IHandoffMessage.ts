@@ -6,7 +6,7 @@ export enum MessageSource {
     Customer = 'Customer'
 }
 
-export interface IHandoffMessage extends IMessage {
-    customerAddress?: IAddress;
-    agentAddress?: IAddress;
-}
+// export interface IHandoffMessage extends IMessage {
+//     customerAddress?: IAddress;
+//     agentAddress?: IAddress;
+// }
