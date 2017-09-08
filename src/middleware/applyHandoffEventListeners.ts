@@ -1,9 +1,6 @@
-// import * as $Promise from 'bluebird';
-import { IAddress, Message, UniversalBot } from 'botbuilder';
+import { UniversalBot } from 'botbuilder';
 import { EventMessageType } from '../eventMessages/EventMessageType';
 import { HandoffEventMessage } from '../eventMessages/HandoffEventMessage';
-import { IConversation } from '../IConversation';
-import { EventFailureHandler } from '../options/EventFailureHandlers';
 import { IEventHandler, IEventHandlers } from '../options/IEventHandlers';
 import { IProvider } from '../provider/IProvider';
 import { ErrorEventMessage } from './../eventMessages/ErrorEventMessage';

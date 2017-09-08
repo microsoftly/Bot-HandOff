@@ -1,7 +1,6 @@
-import { IAddress, IMessage, UniversalBot } from 'botbuilder';
+import { IMessage, UniversalBot } from 'botbuilder';
 import { ConversationState } from '../../src/IConversation';
 import { sendMirrorMessages } from '../utils';
-// import { IHandoffMessage } from './../IHandoffMessage';
 import { IProvider } from './../provider/IProvider';
 
 /**
@@ -14,8 +13,7 @@ export function getBotMirrorMiddleware(bot: UniversalBot, provider: IProvider): 
 
         // if in agent mode, bot messages are either going to or from a customer/agent
         if (convo.conversationState !== ConversationState.Agent) {
-            // const messagesToSend =
-            //     convo.watchingAgents.map((watchingAddress: IAddress) => Object.assign({}, message, { address: watchingAddress }));
+
             const agentMirrorAddresses = convo.watchingAgents;
 
             sendMirrorMessages(bot, message, convo.watchingAgents);

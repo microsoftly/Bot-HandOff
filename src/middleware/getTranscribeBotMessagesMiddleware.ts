@@ -1,5 +1,4 @@
 import { IAddress, IMessage } from 'botbuilder';
-// import { IHandoffMessage } from './../IHandoffMessage';
 import { IProvider } from './../provider/IProvider';
 
 /**
@@ -16,11 +15,5 @@ export function getTranscribeBotMessagesMiddleware(provider: IProvider): (s: IMe
         }
 
         next();
-
-        // const convo = await provider.getConversationFromCustomerAddress(message.address);
-        // convo.watchingAgents.forEach((watchingAgentAddress: IAddress) => );)
-        //tslint:disable
-        // return transcribePromise.then(() => next())
-        //tslint:enable
     };
 }
