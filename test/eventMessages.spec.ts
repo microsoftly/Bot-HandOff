@@ -28,7 +28,7 @@ const isAgent = (session: Session): Promise<boolean> => {
     return Promise.resolve(session.message.address.user.name.toLowerCase().includes('agent'));
 };
 
-describe.only('event messages', () => {
+describe('event messages', () => {
     let bot: UniversalBot;
     let eventHandlerSpies: IEventHandlers;
     let providerSpy: IProvider;
