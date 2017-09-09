@@ -1,6 +1,5 @@
 import { IAddress, IIdentity, IMessage, Message } from 'botbuilder';
 import * as sinon from 'sinon';
-import { InMemoryProvider } from '../dist/src/provider/prebuilt/InMemoryProvider';
 import { ConnectEventMessage } from '../src/eventMessages/ConnectEventMessage';
 import { DequeueEventMessage } from '../src/eventMessages/DequeueEventMessage';
 import { DisconnectEventMessage } from '../src/eventMessages/DisconnectEventMessage';
@@ -12,6 +11,7 @@ import { EventFailureHandler } from '../src/options/EventFailureHandlers';
 import { EventSuccessHandler } from '../src/options/EventSuccessHandlers';
 import { IEventHandler, IEventHandlers } from '../src/options/IEventHandlers';
 import { IProvider } from '../src/provider/IProvider';
+import { InMemoryProvider } from '../src/provider/prebuilt/InMemoryProvider';
 
 const bot = {
     id: 'bot',
