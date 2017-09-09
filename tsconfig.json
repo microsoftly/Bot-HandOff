@@ -14,7 +14,6 @@
         "./src/index.ts",
         "./test/AgentHandoff.spec.ts",
         "./test/provider.spec.ts",
-        "./test/handoffMessageEvents.spec.ts",
         "./test/eventMessages.spec.ts",
         "./test/providerTest.ts"
     ]
