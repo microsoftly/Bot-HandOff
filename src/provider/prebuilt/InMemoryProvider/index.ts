@@ -1,10 +1,11 @@
 import { IAddress, IMessage } from 'botbuilder';
 import * as _ from 'lodash';
 import { ConversationState, IConversation} from '../../../IConversation';
+import { AgentAlreadyConnectedOnConversationIdException } from '../../errors/AgentAlreadyConnectedOnConversationIdException';
 import { AgentAlreadyInConversationError} from '../../errors/AgentAlreadyInConversationError';
 import { AgentNotInConversationError} from '../../errors/AgentNotInConversationError';
-import { BotAttemptedToRecordMessageWhileAgentHasConnection} from '../../errors/BotAttemptedToRecordMessageWhileAgentHasConnection';
 import { CustomerAlreadyConnectedException } from '../../errors/CustomerAlreadyConnectedException';
+import { CustomerNotConnectedException } from '../../errors/CustomerNotConnectedException';
 import { IProvider } from '../../IProvider';
 import { AgentToCustomerConnectionMapper } from './AgentToCustomerConnectionMapper';
 import { InMemoryConversation } from './InMemoryConversation';
@@ -19,18 +20,6 @@ export class InMemoryProvider implements IProvider {
     }
 
     public addBotMessageToTranscript(message: IMessage): Promise<IConversation> {
-        const customerAddress = message.address;
-
-        const convo = this.conversations.get(customerAddress.user.id);
-
-        if (convo && convo.conversationState === ConversationState.Agent) {
-            return Promise.reject(new BotAttemptedToRecordMessageWhileAgentHasConnection(customerAddress.conversation.id));
-        }
-
-        return this.addBotMessageToTranscriptIgnoringConversationState(message);
-    }
-
-    public addBotMessageToTranscriptIgnoringConversationState(message: IMessage): Promise<IConversation> {
         const customerAddress = message.address;
         const convo = this.getConversationSynchronously(customerAddress);
 
@@ -74,6 +63,10 @@ export class InMemoryProvider implements IProvider {
 
     // CONNECT/DISCONNECT ACTIONS
     public connectCustomerToAgent(customerAddress: IAddress, agentAddress: IAddress): Promise<IConversation> {
+        if (this.agentToCustomerConnectionMapper.getCustomerIdConnectedToAgent(agentAddress)) {
+            return Promise.reject(new AgentAlreadyConnectedOnConversationIdException());
+        }
+
         const convo = this.conversations.get(customerAddress.user.id);
 
         if (convo.conversationState === ConversationState.Agent) {
@@ -95,11 +88,13 @@ export class InMemoryProvider implements IProvider {
         const convo = this.getConversationSynchronously(customerAddress);
 
         if (convo.conversationState !== ConversationState.Agent) {
-            // TODO throw customer not connected exception
+            // TODO test this
+            return Promise.reject(new CustomerNotConnectedException());
         }
 
-        if (!_.isMatch(agentAddress, convo.customerAddress)) {
-            // TODO throw disconnecting agent is not the connected agent error
+        if (!_.isMatch(agentAddress, convo.agentAddress)) {
+            // TODO test this
+            return Promise.reject(new AgentNotInConversationError());
         }
 
         this.agentToCustomerConnectionMapper.disconnectCustomerFromAgent(customerAddress, agentAddress);

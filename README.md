@@ -1,11 +1,11 @@
-# bot-handoff [![CircleCI](https://circleci.com/gh/microsoftly/Bot-HandOff.svg?style=shield)](https://circleci.com/gh/microsoftly/bot-handoff) [![npm version](https://badge.fury.io/js/bot-handoff.svg)](https://badge.fury.io/js/bot-handoff) [![Coverage Status](https://coveralls.io/repos/github/microsoftly/bot-handoff/badge.svg?branch=master)](https://coveralls.io/github/microsoftly/bot-handoff?branch=master)
+# bot-handoff [![CircleCI](https://circleci.com/gh/microsoftly/bot-handoff.svg?style=shield)](https://circleci.com/gh/microsoftly/bot-handoff) [![npm version](https://badge.fury.io/js/bot-handoff.svg)](https://badge.fury.io/js/bot-handoff) [![Coverage Status](https://coveralls.io/repos/github/microsoftly/bot-handoff/badge.svg?branch=master)](https://coveralls.io/github/microsoftly/bot-handoff?branch=master)
 
 
-This project provides an unopinionated framework called **bot-handoff**, which enables bot authors to implement several scenrios including, but not limited to a full fledged call center service, with minimal changes to the bot
+This project provides a framework called **bot-handoff**, which enables bot authors to implement several scenrios including, but not limited to a full fledged call center service, with minimal changes to the bot code
 
 A demo is not included yet. Expect it down the line.
 
-While the docs are being written, you can refer to the tests.
+While the docs are being written, most questions can be answered by inpsecting the failry comprehensive tests.
 
 Just an initial note: if you wish to have a data provider that is not in memory, you must implement the ```IProvider``` interface and pass the provider tests. Just add your implementation to ```provider.spec.ts```'s runner and run the suite or use the exported test runner from ```test/providerTests.ts```. If your provider passes all tests it will work as expected with the routing layer. If you wish to make your implementation public, please provide submit a PR and it will be reviewed.
 
@@ -19,9 +19,9 @@ const * as handoff= require('bot-handoff');
 const isAgent = (session) => session.message.address.user.name === 'agent';
 
 // bot is a UniversalBot from botbuilder
-// in memory provider is the data layer with an in memory only store.
+// in memory provider is the data layer with an in-memory only store.
 // when more prebuilt providers are available and the module updated, they will be available from the prebuiltProviders directory
-handoff.applyHandoffMiddleware(bot, isAgent, new handoff.prebuiltProviders.InMemoryProvider(), { shouldTranscribeMessages: false})
+handoff.applyHandoffMiddleware(bot, isAgent, new handoff.prebuiltProviders.InMemoryProvider(), { shouldTranscribeMessages: false })
 
 // due to the difficult way of expressing what this would look like in an emulator, it is recommended that you look at the tests (either handoffMessageEvents.spec.ts or AgentHandoff.spec.ts) a clear way on how to trigger events such as, but not limited to connecting to an agent
 ```
@@ -81,5 +81,7 @@ Each event handler has a default action:
 * **dequeue** default success: respond to customer ```you're no longer in line for an agent```
 * **watch** default success: no action
 * **unwatch** default success: no action
-// INSERT LINK HERE
+## ```messageReceivedWhileWaitingHandler``` (bot, session, next) => {}
+when a conversation is in a wait (queued) state, messages from a user go to the messageReceivedWhileWaitingHandler. This is where actions like responding __you are third in line to connect to an agent__ should occur.
+
 MIT License

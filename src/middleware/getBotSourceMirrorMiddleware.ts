@@ -18,7 +18,7 @@ export function getBotSourceMirrorMiddleware(bot: UniversalBot, provider: IProvi
 
             sendMirrorMessages(bot, message, convo.watchingAgents);
         }
-// TODO => DELETE THIS
+
         next();
     };
 }

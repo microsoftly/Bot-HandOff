@@ -1,6 +1,5 @@
-// import * as $Promise from 'bluebird';
 import { BotTester } from 'bot-tester';
-import { ConsoleConnector, IAddress, IMessage, Session, UniversalBot } from 'botbuilder';
+import { IAddress, IMessage, Session, UniversalBot } from 'botbuilder';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
@@ -20,12 +19,6 @@ import * as TestDataProvider from './TestDataProvider';
 chai.use(sinonChai);
 
 const expect = chai.expect;
-
-const connector = new ConsoleConnector();
-
-const isAgent = (session: Session): Promise<boolean> => {
-    return Promise.resolve(session.message.address.user.name.toLowerCase().includes('agent'));
-};
 
 describe('event messages', () => {
     let bot: UniversalBot;
@@ -59,18 +52,14 @@ describe('event messages', () => {
     beforeEach(() => {
         const handoffOptions: IHandoffOptions = {};
 
-        // provider = new InMemoryProvider();
         providerSpy = TestDataProvider.createIProviderMock();
 
         eventHandlerSpies = TestDataProvider.getEventHandlerSpies();
         handoffOptions.eventHandlers = eventHandlerSpies;
-        bot = new UniversalBot(connector);
 
-        bot.dialog('/', (session: Session) => {
-            session.send('this message does not matter for this test');
-        });
+        bot = TestDataProvider.getNewBotInstance();
 
-        applyHandoffMiddleware(bot, isAgent, providerSpy, handoffOptions);
+        applyHandoffMiddleware(bot, TestDataProvider.IS_AGENT_FN, providerSpy, handoffOptions);
     });
 
     describe('queue', () => {

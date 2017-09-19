@@ -11,7 +11,7 @@ export function getTranscribeBotMessagesMiddleware(provider: IProvider): (s: IMe
         // messages that get routed to agents will never go to the bot. For this reason, we know that messages at this point
         // are only going to the user.
         if (message.type === 'message') {
-            await provider.addBotMessageToTranscriptIgnoringConversationState(message);
+            await provider.addBotMessageToTranscript(message);
         }
 
         next();

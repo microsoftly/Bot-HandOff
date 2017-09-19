@@ -1,4 +1,3 @@
-// import * as $Promise from 'bluebird';
 import { BotTester } from 'bot-tester';
 import { ConsoleConnector, IAddress, IMessage, Message, Session, UniversalBot } from 'botbuilder';
 import * as chai from 'chai';
@@ -21,21 +20,10 @@ const expect = chai.expect;
 
 const connector = new ConsoleConnector();
 
-const isAgent = (session: Session): Promise<boolean> => {
-    return Promise.resolve(session.message.address.user.name.toLowerCase().includes('agent'));
-};
-
-const INTRO_TEXT = 'intro!';
-
-// to avoid binding to a particular implementation of event messages, use the .wait method after a single or several event messages to
-// ensure the expected action occurs
-const EVENT_DELAY = 50;
-
 describe('agent handoff', () => {
     let bot: UniversalBot;
     let providerSpy: IProvider;
     let eventHandlerSpies: IEventHandlers;
-    let messageReceivedWhileWaitingSpy: sinon.SinonSpy;
 
     beforeEach(async () => {
         // this is a hack to work with the bot tester framework (not just end up hanging). This is likely not a good example implementation
@@ -43,23 +31,19 @@ describe('agent handoff', () => {
             next();
         };
 
-        messageReceivedWhileWaitingSpy = sinon.spy(messageReceivedWhileWaitingHandler);
-
         eventHandlerSpies = TestDataProvider.getEventHandlerSpies();
         providerSpy = TestDataProvider.createIProviderSpy();
-        bot = new UniversalBot(connector);
-        bot.dialog('/', (session: Session) => {
-            session.send(INTRO_TEXT);
-        });
+
+        bot = TestDataProvider.getNewBotInstance();
 
         applyHandoffMiddleware(
-            bot, isAgent, providerSpy,
-            { eventHandlers: eventHandlerSpies, messageReceivedWhileWaitingHandler: messageReceivedWhileWaitingSpy });
+            bot, TestDataProvider.IS_AGENT_FN, providerSpy,
+            { eventHandlers: eventHandlerSpies, messageReceivedWhileWaitingHandler: messageReceivedWhileWaitingHandler });
 
         // all customers should have their intro messages sent first
         await new BotTester(bot)
-            .sendMessageToBot(TestDataProvider.customer1.message1, INTRO_TEXT)
-            .sendMessageToBot(TestDataProvider.customer2.message1, INTRO_TEXT)
+            .sendMessageToBot(TestDataProvider.customer1.message1, TestDataProvider.DEFAULT_BOT_RESPONSE)
+            .sendMessageToBot(TestDataProvider.customer2.message1, TestDataProvider.DEFAULT_BOT_RESPONSE)
             .runTest();
     });
 
@@ -68,7 +52,7 @@ describe('agent handoff', () => {
         await new BotTester(bot, { defaultAddress: TestDataProvider.customer1.address })
             .sendMessageToBotIgnoringResponseOrder(
                 new ConnectEventMessage(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address))
-                .wait(EVENT_DELAY)
+                .wait(TestDataProvider.EVENT_DELAY)
             .sendMessageToBot(
                 TestDataProvider.agent1.convo1.message1,
                 TestDataProvider.getExpectedReceivedMessage(TestDataProvider.agent1.convo1.message1, TestDataProvider.customer1.address))
@@ -90,13 +74,13 @@ describe('agent handoff', () => {
             await new BotTester(bot, { defaultAddress: TestDataProvider.customer1.address })
                 .sendMessageToBot(TestDataProvider.agent1.convo1.eventMessage.toWatch.customer1)
                 // allow time for the messages to process (watching doesn't send a response by default)
-                .wait(EVENT_DELAY)
+                .wait(TestDataProvider.EVENT_DELAY)
                 .runTest();
         });
         // perfect example case for possibly receiving messages in an unknown order
         it('each receive a message for every bot and user message', async () => {
             const botResponseToCustomerMessage = new Message()
-                .text(INTRO_TEXT)
+                .text(TestDataProvider.DEFAULT_BOT_RESPONSE)
                 .address(TestDataProvider.customer1.address)
                 .toMessage();
 
@@ -122,7 +106,7 @@ describe('agent handoff', () => {
 
             await new BotTester(bot)
                 .sendMessageToBot(TestDataProvider.agent2.convo1.eventMessage.toWatch.customer1)
-                .wait(EVENT_DELAY)
+                .wait(TestDataProvider.EVENT_DELAY)
                 .sendMessageToBotIgnoringResponseOrder(
                     TestDataProvider.customer1.message2,
 
@@ -158,7 +142,7 @@ describe('agent handoff', () => {
 
             await new BotTester(bot)
                 .sendMessageToBot(TestDataProvider.agent2.convo1.eventMessage.toConnectTo.customer1)
-                .wait(EVENT_DELAY)
+                .wait(TestDataProvider.EVENT_DELAY)
                 .sendMessageToBotIgnoringResponseOrder(
                     agent2Message,
 
@@ -170,7 +154,7 @@ describe('agent handoff', () => {
 
         it('no longer receive messages when no longer watching and do not affect other agents that are still watching', async () => {
             const botResponseToCustomerMessage = new Message()
-                .text(INTRO_TEXT)
+                .text(TestDataProvider.DEFAULT_BOT_RESPONSE)
                 .address(TestDataProvider.customer1.address)
                 .toMessage();
 
@@ -181,21 +165,21 @@ describe('agent handoff', () => {
 
             await new BotTester(bot, { defaultAddress: TestDataProvider.customer1.address })
                 .sendMessageToBot(TestDataProvider.agent1.convo1.eventMessage.toUnwatch.customer1)
-                .wait(EVENT_DELAY)
+                .wait(TestDataProvider.EVENT_DELAY)
                 .runTest();
 
             await new BotTester(bot, { defaultAddress: TestDataProvider.customer1.address })
-                    .wait(EVENT_DELAY)
+                    .wait(TestDataProvider.EVENT_DELAY)
                     .sendMessageToBotIgnoringResponseOrder(
                         TestDataProvider.customer1.message2,
-                        INTRO_TEXT
+                        TestDataProvider.DEFAULT_BOT_RESPONSE
                     )
                     .runTest();
         });
 
         it('other agents are unaffected by an agent unwatching', async () => {
             const botResponseToCustomerMessage = new Message()
-                .text(INTRO_TEXT)
+                .text(TestDataProvider.DEFAULT_BOT_RESPONSE)
                 .address(TestDataProvider.customer1.address)
                 .toMessage();
 
@@ -207,14 +191,14 @@ describe('agent handoff', () => {
             await new BotTester(bot, { defaultAddress: TestDataProvider.customer1.address })
                 .sendMessageToBot(TestDataProvider.agent2.convo1.eventMessage.toWatch.customer1)
                 .sendMessageToBot(TestDataProvider.agent1.convo1.eventMessage.toUnwatch.customer1)
-                .wait(EVENT_DELAY)
+                .wait(TestDataProvider.EVENT_DELAY)
                 .runTest();
 
             await new BotTester(bot, { defaultAddress: TestDataProvider.customer1.address })
-                    .wait(EVENT_DELAY)
+                    .wait(TestDataProvider.EVENT_DELAY)
                     .sendMessageToBotIgnoringResponseOrder(
                         TestDataProvider.customer1.message2,
-                        INTRO_TEXT,
+                        TestDataProvider.DEFAULT_BOT_RESPONSE,
                         agent2ReceptionOfCustomerMessage2
                     )
                     .runTest();
@@ -226,7 +210,7 @@ describe('agent handoff', () => {
         beforeEach(async () => {
             await new BotTester(bot)
                 .sendMessageToBot(TestDataProvider.agent1.convo1.eventMessage.toConnectTo.customer1)
-                .wait(EVENT_DELAY)
+                .wait(TestDataProvider.EVENT_DELAY)
                 .runTest();
         });
 
@@ -253,7 +237,7 @@ describe('agent handoff', () => {
 
             await new BotTester(bot)
                 .sendMessageToBot(TestDataProvider.agent1.convo2.eventMessage.toConnectTo.customer2)
-                .wait(EVENT_DELAY)
+                .wait(TestDataProvider.EVENT_DELAY)
                 .sendMessageToBot(TestDataProvider.agent1.convo1.message1, customer1ReceptionOfAgent1Message1)
                 .sendMessageToBot(TestDataProvider.agent1.convo2.message2, customer2ReceptionOfAgent1Message2)
                 .sendMessageToBot(TestDataProvider.customer1.message2, agentReceptionOfCustomer1Message2)
@@ -266,7 +250,7 @@ describe('agent handoff', () => {
 
             await new BotTester(bot)
                 .sendMessageToBot(TestDataProvider.agent2.convo1.eventMessage.toConnectTo.customer1)
-                .wait(EVENT_DELAY)
+                .wait(TestDataProvider.EVENT_DELAY)
                 .runTest();
 
             expect(eventHandlerSpies.connect.failure).to.have.been.called;
@@ -276,12 +260,12 @@ describe('agent handoff', () => {
         describe('can disconnect from a conversation', () => {
             it('and not affect other agents watching the conversation', async () => {
                 const botResponseToCustomerMessage = new Message()
-                    .text(INTRO_TEXT)
+                    .text(TestDataProvider.DEFAULT_BOT_RESPONSE)
                     .address(TestDataProvider.customer1.address)
                     .toMessage();
 
                 const botResponseMirroredToAgent2 = new Message()
-                    .text(INTRO_TEXT)
+                    .text(TestDataProvider.DEFAULT_BOT_RESPONSE)
                     .address(TestDataProvider.agent2.convo1.address)
                     .toMessage();
 
@@ -292,9 +276,9 @@ describe('agent handoff', () => {
 
                 await new BotTester(bot)
                     .sendMessageToBot(TestDataProvider.agent2.convo1.eventMessage.toWatch.customer1)
-                    .wait(EVENT_DELAY)
+                    .wait(TestDataProvider.EVENT_DELAY)
                     .sendMessageToBot(TestDataProvider.agent1.convo1.eventMessage.toDisconnectFrom.customer1)
-                    .wait(EVENT_DELAY)
+                    .wait(TestDataProvider.EVENT_DELAY)
                     .sendMessageToBotIgnoringResponseOrder(
                         TestDataProvider.customer1.message2,
 
@@ -317,27 +301,12 @@ describe('agent handoff', () => {
 
                 await new BotTester(bot)
                     .sendMessageToBot(TestDataProvider.agent1.convo2.eventMessage.toConnectTo.customer2)
-                    .wait(EVENT_DELAY)
+                    .wait(TestDataProvider.EVENT_DELAY)
                     .sendMessageToBot(TestDataProvider.agent1.convo2.eventMessage.toDisconnectFrom.customer2)
-                    .wait(EVENT_DELAY)
+                    .wait(TestDataProvider.EVENT_DELAY)
                     .sendMessageToBot(TestDataProvider.agent1.convo1.message1, customerReceptionOfAgentMessage)
                     .runTest();
             });
         });
-    });
-
-    // TODO move these to a different test. Need to also test shouldTranscribe option
-    describe('Handoff Options', () => {
-        it('calls the MessageReceivedWhileWaitingHandler when in a waiting state', async () => {
-            await new BotTester(bot)
-                .then(() => expect(messageReceivedWhileWaitingSpy).not.to.have.been.called)
-                .sendMessageToBot(TestDataProvider.customer1.eventMessage.toQueue)
-                .wait(EVENT_DELAY)
-                .sendMessageToBot(TestDataProvider.customer1.message2)
-                .wait(EVENT_DELAY)
-                .then(() => expect(messageReceivedWhileWaitingSpy).to.have.been.called)
-                .runTest();
-        });
-
     });
 });

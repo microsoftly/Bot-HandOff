@@ -1,7 +1,5 @@
-// import * as Promise from 'bluebird';
 import { IAddress, IMessage } from 'botbuilder';
 import { IConversation } from '../IConversation';
-// import { IHandoffMessage } from './../IHandoffMessage';
 
 export interface IProvider {
 
@@ -20,18 +18,11 @@ export interface IProvider {
     addAgentMessageToTranscript(message: IMessage): Promise<IConversation>;
 
     /**
-     * transcribes a message for a bot
+     * transcribes a message for a bot.
      *
      * @param message message to be transcribed
      */
     addBotMessageToTranscript(message: IMessage): Promise<IConversation>;
-
-    /**
-     * transcribes a message for a bot. Will not throw any checked (known) exceptions
-     *
-     * @param message message to be transcribed
-     */
-    addBotMessageToTranscriptIgnoringConversationState(message: IMessage): Promise<IConversation>;
     /*
         there are 3 basic pairwise actions that can be performed
             1. connect/disconnect customer to/from agent
@@ -57,14 +48,59 @@ export interface IProvider {
      */
     disconnectCustomerFromAgent(customerAddress: IAddress, agentAddress: IAddress): Promise<IConversation>;
 
+    /**
+     * sets the customer conversation state to wait.
+     *
+     * @param customerAddress address of customer being queued
+     */
     queueCustomerForAgent(customerAddress: IAddress): Promise<IConversation>;
+
+    /**
+     * unsets the customer conversation state from wait to bot.
+     *
+     * @param customerAddress address of customer being queued
+     */
     dequeueCustomerForAgent(customerAddress: IAddress): Promise<IConversation>;
 
+    /**
+     * adds agent address to the watching agents collection
+     *
+     * @param customerAddress customer conversation being watched
+     * @param agentAddress address of agent that is watching the conversation
+     */
     watchConversation(customerAddress: IAddress, agentAddress: IAddress): Promise<IConversation>;
+
+    /**
+     * removes agent address to the watching agents collection
+     *
+     * @param customerAddress customer conversation being watched
+     * @param agentAddress address of agent that should be removed from the watching agents collection
+     */
     unwatchConversation(customerAddress: IAddress, agentAddress: IAddress): Promise<IConversation>;
 
+    /**
+     * retrieves the conversation associated with customerAddress
+     *
+     * @param customerAddress customer address for conversation
+     */
     getConversationFromCustomerAddress(customerAddress: IAddress): Promise<IConversation>;
+
+    /**
+     * retrieves the conversation associated with customerAddress. If one does not exist, a new one is created and returned
+     *
+     * @param customerAddress customer address for conversation
+     */
     getOrCreateNewCustomerConversation(customerAddress: IAddress): Promise<IConversation>;
+
+    /**
+     * retrieves a conversation from an agent address
+     *
+     * @param agentAddress agent address associated with conversation being retrieved
+     */
     getConversationFromAgentAddress(agentAddress: IAddress): Promise<IConversation>;
+
+    /**
+     * gets all conversations
+     */
     getAllConversations(): Promise<IConversation[]>;
 }

@@ -1,10 +1,10 @@
 import * as $Promise from 'bluebird';
 import { expect } from 'chai';
+import {
+    AgentAlreadyConnectedOnConversationIdException
+} from '../src/provider/errors/AgentAlreadyConnectedOnConversationIdException';
 import { ConversationState, IConversation } from './../src/IConversation';
 import { AgentNotInConversationError } from './../src/provider/errors/AgentNotInConversationError';
-import {
-    BotAttemptedToRecordMessageWhileAgentHasConnection
-} from './../src/provider/errors/BotAttemptedToRecordMessageWhileAgentHasConnection';
 import { IProvider } from './../src/provider/IProvider';
 import * as TestDataProvider from './TestDataProvider';
 
@@ -162,6 +162,7 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
         describe('connect/disconnect', () => {
             beforeEach(async () => {
                 convo = await provider.connectCustomerToAgent(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
+                await $Promise.delay(TestDataProvider.EVENT_DELAY);
             });
 
             it('sets conversation state to agent', () => {
@@ -184,11 +185,13 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
                 expect(convo.transcript.length).to.eq(2);
             });
 
-            it('throws an error if a bot message is recorded while agent-customer connection is established', () => {
-                // can pass in any message for customer 1 for this to work
-                return provider.addBotMessageToTranscript(TestDataProvider.customer1.message1)
-                    .then(() => expect.fail('should have thrown an error'))
-                    .catch((e: Error) => expect(e).to.be.instanceOf(BotAttemptedToRecordMessageWhileAgentHasConnection));
+            it('throws an AgentAlreadyConnectedOnConversationIdException error if attempting to connect on convo id that is already in use', async () => {
+                try {
+                    await provider.connectCustomerToAgent(TestDataProvider.customer2.address, TestDataProvider.agent1.convo1.address);
+                    expect.fail('should have thrown an AgentAlreadyConnectedOnConversationIdException expectinon');
+                } catch (e) {
+                    expect(e).to.be.instanceof(AgentAlreadyConnectedOnConversationIdException);
+                }
             });
 
             describe('disconnect', () => {
@@ -209,7 +212,7 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
                     expect(convo.watchingAgents.length).to.eq(0);
                 });
 
-                it('throws not connected error if the agent not connected and agent transcription attempt occurs', () => {
+                it('throws agent not in conversation error if the agent not connected and agent transcription attempt occurs', () => {
                     // as long as the messsage is sourced from agent 2, this is good
                     return provider.addAgentMessageToTranscript(TestDataProvider.agent2.convo1.message1)
                         .then(() => expect.fail('should throw an AgentNotInConversationError'))
@@ -226,11 +229,13 @@ export function providerTest(getNewProvider: () => $Promise<IProvider>, provider
                     expect(convo.watchingAgents).to.deep.include(TestDataProvider.agent1.convo1.address);
                     expect(convo.watchingAgents).to.deep.include(TestDataProvider.agent2.convo1.address);
 
-                    convo = await provider.disconnectCustomerFromAgent(TestDataProvider.customer1.address, TestDataProvider.agent2.convo1.address);
+                    convo = await
+                        provider.disconnectCustomerFromAgent(TestDataProvider.customer1.address, TestDataProvider.agent1.convo1.address);
+
                     expect(convo.agentAddress).not.to.deep.eq(TestDataProvider.agent1.convo1.address);
                     expect(convo.conversationState).to.eq(ConversationState.Bot);
                     expect(convo.watchingAgents.length).to.eq(1);
-                    expect(convo.watchingAgents).to.deep.include(TestDataProvider.agent1.convo1.address);
+                    expect(convo.watchingAgents).to.deep.include(TestDataProvider.agent2.convo1.address);
                 });
             });
         });

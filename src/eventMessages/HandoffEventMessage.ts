@@ -2,6 +2,9 @@ import { IAddress, IIdentity, IMessage } from 'botbuilder';
 import { ErrorEventMessage } from './ErrorEventMessage';
 import { EventMessageType } from './EventMessageType';
 
+/**
+ * Base class for bot-handoff event messages.
+ */
 export abstract class HandoffEventMessage  {
     public readonly type: EventMessageType;
     public customerAddress: IAddress;

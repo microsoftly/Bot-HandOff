@@ -10,6 +10,14 @@ import { InMemoryProvider } from './provider/prebuilt/InMemoryProvider';
 import { AgentMessageRouter } from './routers/AgentMessageRouter';
 import { CustomerMessageRouter } from './routers/CustomerMessageRouter';
 
+/**
+ * applies bot-handoff middelware to a bot.
+ *
+ * @param bot bot to have handoff middleware applied to
+ * @param isAgent function that takes in a session and can return a boolean or a Promise<boolean>. Returns true if the session belongs to an agent
+ * @param provider implementation of provider
+ * @param options handoff options
+ */
 export function applyHandoffMiddleware(
     bot: UniversalBot,
     isAgent: (session: Session) => boolean | PromiseLike<boolean>,

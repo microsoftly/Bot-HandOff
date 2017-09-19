@@ -1,4 +1,4 @@
-import { IAddress, IIdentity, IMessage, Message } from 'botbuilder';
+import { ConsoleConnector, IAddress, IIdentity, IMessage, Message, Session, UniversalBot } from 'botbuilder';
 import * as sinon from 'sinon';
 import { ConnectEventMessage } from '../src/eventMessages/ConnectEventMessage';
 import { DequeueEventMessage } from '../src/eventMessages/DequeueEventMessage';
@@ -311,7 +311,7 @@ export function createIProviderSpy(): IProvider {
     provider.addCustomerMessageToTranscript = sinon.spy(provider, 'addCustomerMessageToTranscript');
     provider.addAgentMessageToTranscript = sinon.spy(provider, 'addAgentMessageToTranscript');
     provider.addBotMessageToTranscript = sinon.spy(provider, 'addBotMessageToTranscript');
-    provider.addBotMessageToTranscriptIgnoringConversationState = sinon.spy(provider, 'addBotMessageToTranscriptIgnoringConversationState');
+    // provider.addBotMessageToTranscript = sinon.spy(provider, 'addBotMessageToTranscriptIgnoringConversationState');
     provider.connectCustomerToAgent = sinon.spy(provider, 'connectCustomerToAgent');
     provider.disconnectCustomerFromAgent = sinon.spy(provider, 'disconnectCustomerFromAgent');
     provider.queueCustomerForAgent = sinon.spy(provider, 'queueCustomerForAgent');
@@ -332,8 +332,8 @@ export function createIProviderMock(): IProvider {
     provider.addCustomerMessageToTranscript = sinon.mock(provider).expects('addCustomerMessageToTranscript');
     provider.addAgentMessageToTranscript = sinon.mock(provider).expects('addAgentMessageToTranscript');
     provider.addBotMessageToTranscript = sinon.mock(provider).expects('addBotMessageToTranscript');
-    provider.addBotMessageToTranscriptIgnoringConversationState =
-        sinon.mock(provider).expects('addBotMessageToTranscriptIgnoringConversationState');
+    // provider.addBotMessageToTranscript =
+    //     sinon.mock(provider).expects('addBotMessageToTranscriptIgnoringConversationState');
     provider.connectCustomerToAgent = sinon.mock(provider).expects('connectCustomerToAgent');
     provider.disconnectCustomerFromAgent = sinon.mock(provider).expects('disconnectCustomerFromAgent');
     provider.queueCustomerForAgent = sinon.mock(provider).expects('queueCustomerForAgent');
@@ -347,3 +347,23 @@ export function createIProviderMock(): IProvider {
 
     return provider;
 }
+
+// to avoid binding to a particular implementation of event messages, use the .wait method after a single or several event messages to
+// ensure the expected action occurs
+export const EVENT_DELAY = 50;
+
+export const DEFAULT_BOT_RESPONSE = 'response!';
+
+export function getNewBotInstance(): UniversalBot {
+    const chatbot = new UniversalBot(new ConsoleConnector());
+
+    chatbot.dialog('/', (session: Session) => {
+        session.send(DEFAULT_BOT_RESPONSE);
+    });
+
+    return chatbot;
+}
+
+export const IS_AGENT_FN = (session: Session): Promise<boolean> => {
+    return Promise.resolve(session.message.address.user.name.toLowerCase().includes('agent'));
+};
