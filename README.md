@@ -11,3 +11,6 @@ While the docs are being written, you can refer to the tests.
 Just an initial note: if you wish to have a data provider that is not in memory, you must implement the ```IProvider``` interface and pass the provider tests. Just add your implementation to ```provider.spec.ts```'s runner and run the suite or use the exported test runner from ```test/providerTests.ts```. If your provider passes all tests it will work as expected with the routing layer. If you wish to make your implementation public, please provide submit a PR and it will be reviewed.
 
 MIT License
+
+
+Check out the simplifyModel branch if you're looking for the most up to date version of this repo. It is not master yet because it does not have a GUI based demo
