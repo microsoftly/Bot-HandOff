@@ -89,6 +89,15 @@ export function conversationProviderTest<T extends IAddress>(
 
             // TODO add error cases
             // 1. when connected to agent
+            it('throws an error when connected to an agent', async () => {
+                await convoProvider.enqueueCustomer(TestData.customer1.address);
+                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+
+                try {
+                    await convoProvider.enqueueCustomer(TestData.customer1.address);
+                    expect.fail('enqueiing a customer that is already connected to an did not throw an error');
+                } catch (e) {}
+            });
         });
 
         describe('dequeue', () => {
