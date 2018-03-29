@@ -106,6 +106,36 @@ const CUSTOMER_2_MESSAGE_3 = new Message()
     .address(CUSTOMER_2)
     .toMessage();
 
+const BOT_TO_CUSTOMER_1_MESSAGE_1 = new Message()
+    .text('bot message to customer 1 message 1')
+    .address(CUSTOMER_1)
+    .toMessage();
+
+const BOT_TO_CUSTOMER_2_MESSAGE_1 = new Message()
+    .text('bot message to customer 2 message 1')
+    .address(CUSTOMER_1)
+    .toMessage();
+
+const BOT_TO_CUSTOMER_1_MESSAGE_2 = new Message()
+    .text('bot message to customer 1 message 2')
+    .address(CUSTOMER_1)
+    .toMessage();
+
+const BOT_TO_CUSTOMER_2_MESSAGE_2 = new Message()
+    .text('bot message to customer 2 message 2')
+    .address(CUSTOMER_1)
+    .toMessage();
+
+const BOT_TO_CUSTOMER_1_MESSAGE_3 = new Message()
+    .text('bot message to customer 1 message 3')
+    .address(CUSTOMER_1)
+    .toMessage();
+
+const BOT_TO_CUSTOMER_2_MESSAGE_3 = new Message()
+    .text('bot message to customer 2 message 3')
+    .address(CUSTOMER_1)
+    .toMessage();
+
 const AGENT_1_CONVO_1_MESSAGE_1 = new Message()
     .text('agent 1 convo 1 FIRST message')
     .address(AGENT_1_CONVO_1)
@@ -215,7 +245,13 @@ export const customer1 = {
 
     message1: CUSTOMER_1_MESSAGE_1,
     message2: CUSTOMER_1_MESSAGE_2,
-    message3: CUSTOMER_1_MESSAGE_3
+    message3: CUSTOMER_1_MESSAGE_3,
+
+    bot: {
+        response1: BOT_TO_CUSTOMER_1_MESSAGE_1,
+        response2: BOT_TO_CUSTOMER_1_MESSAGE_2,
+        response3: BOT_TO_CUSTOMER_1_MESSAGE_3
+    }
 };
 
 export const customer2 = {
@@ -223,5 +259,11 @@ export const customer2 = {
 
     message1: CUSTOMER_2_MESSAGE_1,
     message2: CUSTOMER_2_MESSAGE_2,
-    message3: CUSTOMER_2_MESSAGE_3
+    message3: CUSTOMER_2_MESSAGE_3,
+
+    bot: {
+        response1: BOT_TO_CUSTOMER_2_MESSAGE_1,
+        response2: BOT_TO_CUSTOMER_2_MESSAGE_2,
+        response3: BOT_TO_CUSTOMER_2_MESSAGE_3
+    }
 };
