@@ -60,6 +60,10 @@ export class InMemoryConversation<T extends IAddress> implements IConversation<T
     }
 
     public dequeueCustomer(customerAddress: IAddress): InMemoryConversation<T> {
+        if (this.conversationState !== ConversationState.Queued) {
+            throw new Error('Cannot dequeue a customer that is not queued');
+        }
+
         this.conversationState = ConversationState.Bot;
 
         return this;

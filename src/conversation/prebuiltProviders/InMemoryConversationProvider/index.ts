@@ -35,14 +35,7 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     }
 
     public async addBotMessageToTranscript(message: IMessage): Promise<IConversation<T>> {
-        const serializedCustomerAddress = this.serializeAddress(message.address);
-
-        const convo = this.conversations.get(serializedCustomerAddress);
-
-        if (!convo) {
-            // TODO make custom error
-            throw new Error('bot is responding to a conversation that has no transcript');
-        }
+        const convo = this.internalGetConversationFromCustomerAddress(message.address);
 
         return Promise.resolve(await convo.addBotMessageToTranscript(message));
     }
@@ -52,7 +45,9 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     }
 
     public dequeueCustomer(customerAddress: IAddress): Promise<IConversation<T>> {
-        throw new Error('not implemented yet');
+        const convo = this.internalGetConversationFromCustomerAddress(customerAddress);
+
+        return Promise.resolve(convo.dequeueCustomer(customerAddress));
     }
 
     public connectCustomerToAgent(customerAddress: IAddress, agentAddress: T): Promise<IConversation<T>> {
@@ -74,6 +69,21 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         this.conversations.forEach((conversation: InMemoryConversation<T>) => {
 
         });
+
+        return Promise.resolve(null);
+    }
+
+    private internalGetConversationFromCustomerAddress(customerAddress: IAddress): InMemoryConversation<T> {
+        const serializedCustomerAddress = this.serializeAddress(customerAddress);
+
+        const convo = this.conversations.get(serializedCustomerAddress);
+
+        if (!convo) {
+            // TODO make custom error
+            throw new Error(`No record for a conversation for a customer with address ${JSON.stringify(customerAddress)}`);
+        }
+
+        return convo;
     }
 
     private serializeAddress(address: IAddress): string {
