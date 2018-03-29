@@ -87,6 +87,7 @@ export function conversationProviderTest<T extends IAddress>(
                 const convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
 
                 expectTranscriptToContain(convo.transcript,
+                                          TestData.customer1.message1,
                                           TestData.customer1.bot.response1,
                                           TestData.customer1.bot.response2,
                                           TestData.customer1.bot.response3,
