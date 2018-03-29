@@ -121,10 +121,29 @@ export function conversationProviderTest<T extends IAddress>(
             // 1. when connected to agent
         });
 
+        describe('connect to agent', () => {
+            it('updates conversation state to agent', async () => {
+                await convoProvider.enqueueCustomer(TestData.customer1.address);
+                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+
+                const convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
+
+                expect(convo.conversationState).to.eq(ConversationState.Agent);
+                // tslint:disable-next-line:no-unused-expression
+                expect(convo.agentAddress).to.not.be.undefined;
+                expect(convo.agentAddress).to.deep.eq(TestData.agent1.convo1.address);
+            });
+
+            // TODO error cases
+            // 1. when not queued. -> this could be a product spec and updated. Reconsider with feedback
+        });
+
         describe('agent messages', () => {
             beforeEach(async () => {
                 await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message1);
             });
+
+            it('');
 
             // TODO error cases
             // 1. when connected to bot
