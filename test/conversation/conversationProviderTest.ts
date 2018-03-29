@@ -28,18 +28,17 @@ export function conversationProviderTest<T extends IAddress>(
 
         beforeEach(async () => {
             convoProvider = await getConversationProvider();
+
+            await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message1);
         });
 
         it('new customers can have their messages recorded', async () => {
-            await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message1);
-
             const convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
 
             expectTranscriptToContain(convo.transcript, TestData.customer1.message1);
         });
 
         it('existing customers can have their messages recorded', async () => {
-            await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message1);
             await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message2);
             await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message3);
 
@@ -52,9 +51,9 @@ export function conversationProviderTest<T extends IAddress>(
         });
 
         it('multiple customers can save messages at the same time', async () => {
-            await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message1);
             await convoProvider.addCustomerMessageToTranscript(TestData.customer2.message1);
             await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message2);
+
             await convoProvider.addCustomerMessageToTranscript(TestData.customer2.message2);
             await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message3);
             await convoProvider.addCustomerMessageToTranscript(TestData.customer2.message3);
@@ -73,11 +72,11 @@ export function conversationProviderTest<T extends IAddress>(
                                       TestData.customer2.message3);
         });
 
-        describe('bot messages', () => {
-            beforeEach(async () => {
-                await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message1);
-            });
+        it('enqueue customer updates conversation to queued', async () => {
 
+        });
+
+        describe('bot messages', () => {
             it('can be recorded to conversations', async () => {
                 await convoProvider.addBotMessageToTranscript(TestData.customer1.bot.response1);
                 await convoProvider.addBotMessageToTranscript(TestData.customer1.bot.response2);
@@ -92,6 +91,12 @@ export function conversationProviderTest<T extends IAddress>(
                                           TestData.customer1.bot.response2,
                                           TestData.customer1.bot.response3,
                                           TestData.customer1.message2);
+            });
+        });
+
+        describe('agent messages', () => {
+            beforeEach(async () => {
+                await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message1);
             });
         });
     });
