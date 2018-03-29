@@ -2,6 +2,7 @@ import { IAddress, IIdentity, IMessage } from 'botbuilder';
 import { expect } from 'chai';
 // tslint:disable-next-line: no-import-side-effect
 import 'mocha';
+import { ConversationState } from './../../src/conversation/ConversationState';
 import { IConversationProvider } from './../../src/conversation/IConversationProvider';
 import { ITranscriptLine } from './../../src/conversation/ITranscriptLine';
 import { InMemoryConversationProvider } from './../../src/conversation/prebuiltProviders/InMemoryConversationProvider/index';
@@ -72,8 +73,17 @@ export function conversationProviderTest<T extends IAddress>(
                                       TestData.customer2.message3);
         });
 
-        it('enqueue customer updates conversation to queued', async () => {
+        describe('enqueue', () => {
+            it('updates conversation to queued', async () => {
+                await convoProvider.enqueueCustomer(TestData.customer1.address);
 
+                const convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
+
+                expect(convo.conversationState).to.eq(ConversationState.Queued);
+            });
+
+            // TODO add error cases
+            // 1. when connected to agent
         });
 
         describe('bot messages', () => {
@@ -92,12 +102,20 @@ export function conversationProviderTest<T extends IAddress>(
                                           TestData.customer1.bot.response3,
                                           TestData.customer1.message2);
             });
+
+            // TODO add error cases
+            // 1. when connected to agent
         });
 
         describe('agent messages', () => {
             beforeEach(async () => {
                 await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message1);
             });
+
+            // TODO error cases
+            // 1. when connected to bot
+            // 2. when queued
+            // 3. recorded agent and agent sending message do not match
         });
     });
 }
