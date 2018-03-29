@@ -121,9 +121,6 @@ export function conversationProviderTest<T extends IAddress>(
                                           TestData.customer1.bot.response3,
                                           TestData.customer1.message2);
             });
-
-            // TODO add error cases
-            // 1. when connected to agent
         });
 
         describe('connect to agent', () => {
