@@ -41,7 +41,9 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     }
 
     public enqueueCustomer(customerAddress: IAddress): Promise<IConversation<T>> {
-        throw new Error('not implemented yet');
+        const convo = this.internalGetConversationFromCustomerAddress(customerAddress);
+
+        return Promise.resolve(convo.enqueueCustomer(customerAddress));
     }
 
     public dequeueCustomer(customerAddress: IAddress): Promise<IConversation<T>> {
