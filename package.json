@@ -51,12 +51,14 @@
   "dependencies": {
     "bluebird": "^3.5.1",
     "botbuilder": "^3.14.1",
-    "dotenv-extended": "^2.0.1"
+    "dotenv-extended": "^2.0.1",
+    "uuid": "^3.2.1"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.20",
     "@types/chai": "^4.1.2",
     "@types/mocha": "^5.0.0",
+    "@types/uuid": "^3.4.3",
     "chai": "^4.1.2",
     "mocha": "^5.0.5",
     "tslint": "^5.9.1",
