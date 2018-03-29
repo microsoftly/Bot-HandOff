@@ -165,7 +165,7 @@ export function conversationProviderTest<T extends IAddress>(
                 expect(convo.agentAddress).to.be.null
             });
 
-            it.only ('throws an exception when not connected to an agent', async () => {
+            it('throws an exception when not connected to an agent', async () => {
                 try {
                     await convoProvider.disconnectAgentFromCustomer(TestData.agent1.convo1.address as T);
                     expect.fail('disconnect agent from customer did not throw an error');
@@ -218,6 +218,17 @@ export function conversationProviderTest<T extends IAddress>(
                 try {
                     await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message1);
                     expect.fail('transcribing an agent messages should have failed due to being in queued state');
+                } catch (e) {}
+            });
+
+            it('throws an error when a different than the connected agent sent a message', async () => {
+                await convoProvider.enqueueCustomer(TestData.customer1.address);
+                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+                await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message1);
+
+                try {
+                    await convoProvider.addAgentMessageToTranscript(TestData.agent2.convo1.message1);
+                    expect.fail('An agent other than the connected agent recording a message did not throw an error');
                 } catch (e) {}
             });
 
