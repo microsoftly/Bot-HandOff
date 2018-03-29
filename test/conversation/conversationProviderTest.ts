@@ -156,10 +156,22 @@ export function conversationProviderTest<T extends IAddress>(
 
         describe('agent messages', () => {
             beforeEach(async () => {
-                await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message1);
+                await convoProvider.enqueueCustomer(TestData.customer1.address);
+                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
             });
 
-            it('');
+            it('are recorded', async () => {
+                await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message1);
+                await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message2);
+
+                const convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
+
+                expectTranscriptToContain(convo.transcript,
+                                          TestData.customer1.message1,
+                                          TestData.agent1.convo1.message1,
+                                          TestData.agent1.convo1.message2,
+                                          TestData.customer1.message2);
+            });
 
             // TODO error cases
             // 1. when connected to bot
