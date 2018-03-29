@@ -72,5 +72,15 @@ export function conversationProviderTest<T extends IAddress>(
                                       TestData.customer2.message2,
                                       TestData.customer2.message3);
         });
+
+        describe('bot messages', () => {
+            beforeEach(async () => {
+                await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message1);
+            });
+
+            it('bot messages can be recorded to conversations', async () => {
+
+            });
+        });
     });
 }
