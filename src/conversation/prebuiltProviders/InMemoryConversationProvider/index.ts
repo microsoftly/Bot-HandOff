@@ -61,7 +61,13 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     public disconnectCustomerFromAgent(customerAddress: IAddress): Promise<IConversation<T>> {
         const convo = this.internalGetConversationFromCustomerAddress(customerAddress);
 
-        return Promise.resolve(convo.disconnectCustomerFromAgent(customerAddress));
+        return Promise.resolve(convo.disconnectCustomerFromAgent());
+    }
+
+    public async disconnectAgentFromCustomer(agentAddress: T): Promise<IConversation<T>> {
+        const convo = this.internalGetConversationFromAgentAddress(agentAddress);
+
+        return Promise.resolve(convo.disconnectCustomerFromAgent());
     }
 
     public getConversationFromCustomerAddress(customerAddress: IAddress): Promise<IConversation<T>> {
@@ -71,12 +77,9 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     }
 
     public async getConversationFromAgentAddress(agentAddress: T): Promise<IConversation<T>> {
-        // this.conversations.entries().
-        this.conversations.forEach((conversation: InMemoryConversation<T>) => {
+        const convo = this.internalGetConversationFromAgentAddress(agentAddress);
 
-        });
-
-        return Promise.resolve(null);
+        return Promise.resolve(convo);
     }
 
     private internalGetConversationFromCustomerAddress(customerAddress: IAddress): InMemoryConversation<T> {
@@ -87,6 +90,25 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         if (!convo) {
             // TODO make custom error
             throw new Error(`No record for a conversation for a customer with address ${JSON.stringify(customerAddress)}`);
+        }
+
+        return convo;
+    }
+
+    private internalGetConversationFromAgentAddress(agentAddress: T): InMemoryConversation<T> {
+        const serializedAgentAddress = this.serializeAddress(agentAddress);
+
+        const serializedCustomerAddress = this.agentToCustomerSerializedAddressMap.get(serializedAgentAddress);
+
+        if (!serializedCustomerAddress) {
+            throw new Error(`there is no customer conversation on record for ${serializedAgentAddress}`);
+        }
+
+        const convo = this.conversations.get(serializedCustomerAddress);
+
+        if (!convo) {
+            // TODO make custom error
+            throw new Error(`No record for a conversation for a customer with address ${serializedCustomerAddress}`);
         }
 
         return convo;

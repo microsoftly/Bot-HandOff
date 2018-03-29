@@ -76,7 +76,7 @@ export class InMemoryConversation<T extends IAddress> implements IConversation<T
         return this;
     }
 
-    public disconnectCustomerFromAgent(customerAddress: IAddress): InMemoryConversation<T> {
+    public disconnectCustomerFromAgent(): InMemoryConversation<T> {
         if (!this.agentAddress) {
             // TODO make custom error
             throw new Error('No agent to disconnect from');
