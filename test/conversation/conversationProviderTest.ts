@@ -78,8 +78,19 @@ export function conversationProviderTest<T extends IAddress>(
                 await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message1);
             });
 
-            it('bot messages can be recorded to conversations', async () => {
+            it('can be recorded to conversations', async () => {
+                await convoProvider.addBotMessageToTranscript(TestData.customer1.bot.response1);
+                await convoProvider.addBotMessageToTranscript(TestData.customer1.bot.response2);
+                await convoProvider.addBotMessageToTranscript(TestData.customer1.bot.response3);
+                await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message2);
 
+                const convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
+
+                expectTranscriptToContain(convo.transcript,
+                                          TestData.customer1.bot.response1,
+                                          TestData.customer1.bot.response2,
+                                          TestData.customer1.bot.response3,
+                                          TestData.customer1.message2);
             });
         });
     });
