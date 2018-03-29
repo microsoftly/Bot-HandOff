@@ -139,9 +139,12 @@ export function conversationProviderTest<T extends IAddress>(
                 expect(convo.agentAddress).to.deep.eq(TestData.agent1.convo1.address);
             });
 
-            // TODO error cases
-            // 1. when not queued. -> this could be a product spec and updated. Reconsider with feedback
-            // I'm assuming transfers are okay
+            it('throws an error when not in a queued state', async () => {
+                try {
+                    await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+                    expect.fail('connect customer to agent should have thrown an error while in Bot state');
+                } catch (e) {}
+            });
         });
 
         describe('disconnect from agent', () => {
@@ -231,11 +234,6 @@ export function conversationProviderTest<T extends IAddress>(
                     expect.fail('An agent other than the connected agent recording a message did not throw an error');
                 } catch (e) {}
             });
-
-            // TODO error cases
-            // 1. when connected to bot
-            // 2. when queued
-            // 3. recorded agent and agent sending message do not match
         });
     });
 }
