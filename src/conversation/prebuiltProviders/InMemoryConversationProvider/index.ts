@@ -31,7 +31,13 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     }
 
     public addAgentMessageToTranscript(message: IMessage): Promise<IConversation<T>> {
-        throw new Error('not implemented yet');
+        const customerConvo = this.internalGetConversationFromAgentAddress(message.address as T);
+
+        if (!customerConvo) {
+
+        }
+
+        return Promise.resolve(customerConvo.addAgentMessageToTranscript(message));
     }
 
     public async addBotMessageToTranscript(message: IMessage): Promise<IConversation<T>> {
@@ -53,6 +59,8 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     }
 
     public connectCustomerToAgent(customerAddress: IAddress, agentAddress: T): Promise<IConversation<T>> {
+        this.mapAgentToCustomer(agentAddress, customerAddress);
+
         const convo = this.internalGetConversationFromCustomerAddress(customerAddress);
 
         return Promise.resolve(convo.connectCustomerToAgent(customerAddress, agentAddress));
@@ -61,11 +69,13 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     public disconnectCustomerFromAgent(customerAddress: IAddress): Promise<IConversation<T>> {
         const convo = this.internalGetConversationFromCustomerAddress(customerAddress);
 
-        return Promise.resolve(convo.disconnectCustomerFromAgent());
+        return this.disconnectAgentFromCustomer(convo.agentAddress);
     }
 
     public async disconnectAgentFromCustomer(agentAddress: T): Promise<IConversation<T>> {
         const convo = this.internalGetConversationFromAgentAddress(agentAddress);
+
+        this.unmapAgentFromCustomer(agentAddress);
 
         return Promise.resolve(convo.disconnectCustomerFromAgent());
     }
@@ -101,7 +111,7 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         const serializedCustomerAddress = this.agentToCustomerSerializedAddressMap.get(serializedAgentAddress);
 
         if (!serializedCustomerAddress) {
-            throw new Error(`there is no customer conversation on record for ${serializedAgentAddress}`);
+            return null;
         }
 
         const convo = this.conversations.get(serializedCustomerAddress);
@@ -112,6 +122,19 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         }
 
         return convo;
+    }
+
+    private mapAgentToCustomer(agentAddress: T, customerAddress: IAddress): void {
+        const serializedAgentAddress = this.serializeAddress(agentAddress);
+        const serializedCustomerAddress = this.serializeAddress(customerAddress);
+
+        this.agentToCustomerSerializedAddressMap.set(serializedAgentAddress, serializedCustomerAddress);
+    }
+
+    private unmapAgentFromCustomer(agentAddress: T): void {
+        const serializedAgentAddress = this.serializeAddress(agentAddress);
+
+        this.agentToCustomerSerializedAddressMap.delete(serializedAgentAddress);
     }
 
     private serializeAddress(address: IAddress): string {
