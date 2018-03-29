@@ -86,6 +86,20 @@ export function conversationProviderTest<T extends IAddress>(
             // 1. when connected to agent
         });
 
+        describe('dequeue', () => {
+            it('updates conversation state to Bot', async () => {
+                await convoProvider.enqueueCustomer(TestData.customer1.address);
+                await convoProvider.dequeueCustomer(TestData.customer1.address);
+
+                const convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
+
+                expect(convo.conversationState).to.eq(ConversationState.Bot);
+            });
+
+            // TODO add error cases
+            // 1. dequeue when not queued
+        });
+
         describe('bot messages', () => {
             it('can be recorded to conversations', async () => {
                 await convoProvider.addBotMessageToTranscript(TestData.customer1.bot.response1);
