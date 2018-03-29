@@ -24,6 +24,10 @@
   version "7.0.58"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.58.tgz#ae852120137f40a29731a559e48003bd2d5d19f7"
 
+"@types/node@^9.6.1":
+  version "9.6.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-9.6.1.tgz#e2d374ef15b315b48e7efc308fa1a7cd51faa06c"
+
 ajv@^5.1.0:
   version "5.5.2"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-5.5.2.tgz#73b5eeca3fab653e3d3f9422b341ad42205dc965"
