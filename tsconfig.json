@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es6",
+        "target": "es2015",
         "noImplicitAny": false,
         "outDir": "./dist",
         "sourceMap": true,
@@ -11,10 +11,6 @@
         "./dist"
     ],
     "files": [
-        "./src/index.ts",
-        "./test/AgentHandoff.spec.ts",
-        "./test/provider.spec.ts",
-        "./test/eventMessages.spec.ts",
-        "./test/providerTest.ts"
+        "./src/index.ts"
     ]
 }

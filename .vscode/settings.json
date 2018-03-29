@@ -5,5 +5,6 @@
         "out",
         "dist",
         "node_modules/botbuilder/lib"
-    ]
+    ],
+    "python.linting.pylintEnabled": false
 }
