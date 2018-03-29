@@ -5,12 +5,14 @@ import { InMemoryConversation } from './InMemoryConversation';
 
 export class InMemoryConversationProvider<T extends IAddress> implements IConversationProvider<T> {
     private readonly conversations: Map<string, InMemoryConversation<T>>;
+    private readonly agentToCustomerSerializedAddressMap: Map<string, string>;
 
     public constructor() {
         this.conversations = new Map<string, InMemoryConversation<T>>();
+        this.agentToCustomerSerializedAddressMap = new Map<string, string>();
     }
 
-    public async addCustomerMessageToTranscript(message: IMessage): Promise<IConversation<T>> {
+    public addCustomerMessageToTranscript(message: IMessage): Promise<IConversation<T>> {
         const serializedCustomerAddress = this.serializeAddress(message.address);
 
         let customerConversation: InMemoryConversation<T>;
@@ -25,15 +27,24 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
 
         customerConversation.addCustomerMessageToTranscript(message);
 
-        return customerConversation;
+        return Promise.resolve(customerConversation);
     }
 
     public addAgentMessageToTranscript(message: IMessage): Promise<IConversation<T>> {
         throw new Error('not implemented yet');
     }
 
-    public addBotMessageToTranscript(message: IMessage): Promise<IConversation<T>> {
-        throw new Error('not implemented yet');
+    public async addBotMessageToTranscript(message: IMessage): Promise<IConversation<T>> {
+        const serializedCustomerAddress = this.serializeAddress(message.address);
+
+        const convo = this.conversations.get(serializedCustomerAddress);
+
+        if (!convo) {
+            // TODO make custom error
+            throw new Error('bot is responding to a conversation that has no transcript');
+        }
+
+        return Promise.resolve(await convo.addBotMessageToTranscript(message));
     }
 
     public enqueueCustomer(customerAddress: IAddress): Promise<IConversation<T>> {
@@ -56,6 +67,13 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         const serializedCustomerAddress = this.serializeAddress(customerAddress);
 
         return Promise.resolve(this.conversations.get(serializedCustomerAddress));
+    }
+
+    public async getConversationFromAgentAddress(agentAddress: T): Promise<IConversation<T>> {
+        // this.conversations.entries().
+        this.conversations.forEach((conversation: InMemoryConversation<T>) => {
+
+        });
     }
 
     private serializeAddress(address: IAddress): string {

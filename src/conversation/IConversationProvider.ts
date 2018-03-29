@@ -32,4 +32,6 @@ export interface IConversationProvider<T extends IAddress> {
     disconnectCustomerFromAgent(customerAddress: IAddress): Promise<IConversation<T>>;
 
     getConversationFromCustomerAddress(customerAddress: IAddress): Promise<IConversation<T>>;
+
+    getConversationFromAgentAddress(agentAddress: T): Promise<IConversation<T>>;
 }
