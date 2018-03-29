@@ -165,14 +165,14 @@ export function conversationProviderTest<T extends IAddress>(
                 expect(convo.agentAddress).to.be.null
             });
 
-            it('throws an exception when not connected to an agent', async () => {
+            it.only ('throws an exception when not connected to an agent', async () => {
                 try {
                     await convoProvider.disconnectAgentFromCustomer(TestData.agent1.convo1.address as T);
                     expect.fail('disconnect agent from customer did not throw an error');
                 } catch (e) {}
 
                 try {
-                    expect(() => convoProvider.disconnectCustomerFromAgent(TestData.customer1.address)).to.eventually.throw();
+                    await convoProvider.disconnectCustomerFromAgent(TestData.customer1.address);
                     expect.fail('disconnect customer from agent did not throw an error');
                 } catch (e) {}
 
@@ -184,7 +184,7 @@ export function conversationProviderTest<T extends IAddress>(
                 } catch (e) {}
 
                 try {
-                    expect(() => convoProvider.disconnectCustomerFromAgent(TestData.customer1.address)).to.eventually.throw();
+                    await convoProvider.disconnectCustomerFromAgent(TestData.customer1.address);
                     expect.fail('disconnect customer from agent did not throw an error');
                 } catch (e) {}
             });
@@ -205,6 +205,20 @@ export function conversationProviderTest<T extends IAddress>(
                                           TestData.agent1.convo1.message1,
                                           TestData.agent1.convo1.message2,
                                           TestData.customer1.message2);
+            });
+
+            it('throw an error when not conversation state is not agent', async () => {
+                try {
+                    await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message1);
+                    expect.fail('transcribing an agent messages should have failed due to being in Bot state');
+                } catch (e) {}
+
+                await convoProvider.enqueueCustomer(TestData.customer1.address);
+
+                try {
+                    await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message1);
+                    expect.fail('transcribing an agent messages should have failed due to being in queued state');
+                } catch (e) {}
             });
 
             // TODO error cases
