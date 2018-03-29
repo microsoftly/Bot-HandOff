@@ -1,5 +1,6 @@
 import { IAddress, IIdentity, IMessage } from 'botbuilder';
-import { expect } from 'chai';
+import * as chai from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 // tslint:disable-next-line: no-import-side-effect
 import 'mocha';
 import { ConversationState } from './../../src/conversation/ConversationState';
@@ -7,6 +8,10 @@ import { IConversationProvider } from './../../src/conversation/IConversationPro
 import { ITranscriptLine } from './../../src/conversation/ITranscriptLine';
 import { InMemoryConversationProvider } from './../../src/conversation/prebuiltProviders/InMemoryConversationProvider/index';
 import * as TestData from './testDataProvider';
+
+chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 
 function expectTranscriptToContain(transcript: ITranscriptLine[], ...messages: (IMessage |ITranscriptLine)[]): void {
     expect(transcript.length).to.eq(messages.length);
@@ -145,22 +150,50 @@ export function conversationProviderTest<T extends IAddress>(
                 await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
                 await convoProvider.disconnectCustomerFromAgent(TestData.customer1.address);
 
-                const convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
+                let convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
 
                 expect(convo.conversationState).to.eq(ConversationState.Bot);
+
+                await convoProvider.enqueueCustomer(TestData.customer1.address);
+                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+                await convoProvider.disconnectAgentFromCustomer(TestData.agent1.convo1.address as T);
+
+                convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
+
+                expect(convo.conversationState).to.eq(ConversationState.Bot);
+                //tslint:disable-next-line
+                expect(convo.agentAddress).to.be.null
             });
 
-            // TODO error cases
-            // 1. when not connect to agent
+            it('throws an exception when not connected to an agent', async () => {
+                try {
+                    await convoProvider.disconnectAgentFromCustomer(TestData.agent1.convo1.address as T);
+                    expect.fail('disconnect agent from customer did not throw an error');
+                } catch (e) {}
+
+                try {
+                    expect(() => convoProvider.disconnectCustomerFromAgent(TestData.customer1.address)).to.eventually.throw();
+                    expect.fail('disconnect customer from agent did not throw an error');
+                } catch (e) {}
+
+                await convoProvider.enqueueCustomer(TestData.customer1.address);
+
+                try {
+                    await convoProvider.disconnectAgentFromCustomer(TestData.agent1.convo1.address as T);
+                    expect.fail('disconnect agent from customer did not throw an error');
+                } catch (e) {}
+
+                try {
+                    expect(() => convoProvider.disconnectCustomerFromAgent(TestData.customer1.address)).to.eventually.throw();
+                    expect.fail('disconnect customer from agent did not throw an error');
+                } catch (e) {}
+            });
         });
 
         describe('agent messages', () => {
-            beforeEach(async () => {
+            it('are recorded', async () => {
                 await convoProvider.enqueueCustomer(TestData.customer1.address);
                 await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
-            });
-
-            it('are recorded', async () => {
                 await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message1);
                 await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message2);
                 await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message2);

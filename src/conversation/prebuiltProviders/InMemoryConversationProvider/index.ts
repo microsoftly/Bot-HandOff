@@ -69,11 +69,19 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     public disconnectCustomerFromAgent(customerAddress: IAddress): Promise<IConversation<T>> {
         const convo = this.internalGetConversationFromCustomerAddress(customerAddress);
 
+        if (!convo) {
+            throw new Error('cannot disconnect from a conversation that is not connected');
+        }
+
         return this.disconnectAgentFromCustomer(convo.agentAddress);
     }
 
     public async disconnectAgentFromCustomer(agentAddress: T): Promise<IConversation<T>> {
         const convo = this.internalGetConversationFromAgentAddress(agentAddress);
+
+        if (!convo) {
+            throw new Error('cannot disconnect from a conversation that is not connected');
+        }
 
         this.unmapAgentFromCustomer(agentAddress);
 
