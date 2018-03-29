@@ -2,7 +2,7 @@ import { IAddress } from 'botbuilder';
 import { ConversationState } from './ConversationState';
 import { ITranscriptLine } from './ITranscriptLine';
 
-export interface IConversation<T> {
+export interface IConversation<T extends IAddress> {
     customerAddress: IAddress;
 
     agentAddress?: T;

@@ -1,7 +1,7 @@
 import { IAddress, IMessage } from 'botbuilder';
 import { IConversation } from './IConversation';
 
-export interface IConversationProvider<T> {
+export interface IConversationProvider<T extends IAddress> {
     /**
      * transcribes a message for a customer
      *
@@ -29,7 +29,7 @@ export interface IConversationProvider<T> {
 
     connectCustomerToAgent(customerAddress: IAddress, agentAddress: T): Promise<IConversation<T>>;
 
-    disconnectCustomerFromAgent(customerAddress: IAddress, agentAddress: T): Promise<IConversation<T>>;
+    disconnectCustomerFromAgent(customerAddress: IAddress): Promise<IConversation<T>>;
 
     getConversationFromCustomerAddress(customerAddress: IAddress): Promise<IConversation<T>>;
 }
