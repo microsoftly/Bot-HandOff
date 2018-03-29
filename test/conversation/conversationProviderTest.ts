@@ -136,6 +136,22 @@ export function conversationProviderTest<T extends IAddress>(
 
             // TODO error cases
             // 1. when not queued. -> this could be a product spec and updated. Reconsider with feedback
+            // I'm assuming transfers are okay
+        });
+
+        describe('disconnect from agent', () => {
+            it('updates the conversation state to Bot', async () => {
+                await convoProvider.enqueueCustomer(TestData.customer1.address);
+                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+                await convoProvider.disconnectCustomerFromAgent(TestData.customer1.address);
+
+                const convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
+
+                expect(convo.conversationState).to.eq(ConversationState.Bot);
+            });
+
+            // TODO error cases
+            // 1. when not connect to agent
         });
 
         describe('agent messages', () => {
