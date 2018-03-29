@@ -59,7 +59,9 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     }
 
     public disconnectCustomerFromAgent(customerAddress: IAddress): Promise<IConversation<T>> {
-        throw new Error('not implemented yet');
+        const convo = this.internalGetConversationFromCustomerAddress(customerAddress);
+
+        return Promise.resolve(convo.disconnectCustomerFromAgent(customerAddress));
     }
 
     public getConversationFromCustomerAddress(customerAddress: IAddress): Promise<IConversation<T>> {
