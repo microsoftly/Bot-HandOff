@@ -163,6 +163,7 @@ export function conversationProviderTest<T extends IAddress>(
             it('are recorded', async () => {
                 await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message1);
                 await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message2);
+                await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message2);
 
                 const convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
 
