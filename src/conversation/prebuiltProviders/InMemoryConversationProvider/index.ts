@@ -34,7 +34,7 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         const customerConvo = this.internalGetConversationFromAgentAddress(message.address as T);
 
         if (!customerConvo) {
-
+            throw new Error('could not find customer address for agent message');
         }
 
         return Promise.resolve(customerConvo.addAgentMessageToTranscript(message));
@@ -142,6 +142,6 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     }
 
     private serializeAddress(address: IAddress): string {
-        return JSON.stringify(address);
+        return address.user.id;
     }
 }
