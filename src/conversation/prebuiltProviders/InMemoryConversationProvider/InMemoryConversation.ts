@@ -6,7 +6,7 @@ import { IConversation } from './../../IConversation';
 
 export class InMemoryConversation<T extends IAddress> implements IConversation<T> {
     public readonly customerAddress: IAddress;
-    public readonly transcript: ITranscriptLine[];
+    public transcript: ITranscriptLine[];
     public conversationState: ConversationState;
     public agentAddress?: T;
 
@@ -69,7 +69,7 @@ export class InMemoryConversation<T extends IAddress> implements IConversation<T
         return this;
     }
 
-    public connectCustomerToAgent(customerAddress: IAddress, agentAddress: T): InMemoryConversation<T> {
+    public connectCustomerToAgent(agentAddress: T): InMemoryConversation<T> {
         this.conversationState = ConversationState.Agent;
         this.agentAddress = agentAddress;
 
@@ -86,6 +86,17 @@ export class InMemoryConversation<T extends IAddress> implements IConversation<T
         this.agentAddress = null;
 
         return this;
+    }
+
+    // tslint:disable-next-line member-ordering
+    public static from<K extends IAddress>(otherConvo: IConversation<K>): InMemoryConversation<K> {
+        const newConvo = new InMemoryConversation<K>(otherConvo.customerAddress);
+
+        newConvo.agentAddress = Object.assign({}, otherConvo.agentAddress);
+        newConvo.conversationState = otherConvo.conversationState;
+        newConvo.transcript = otherConvo.transcript.map((transcriptLine: ITranscriptLine) => Object.assign({}, transcriptLine));
+
+        return newConvo;
     }
 
     private convertMessageToTranscriptLine(message: IMessage, to: IIdentity, from: IIdentity): ITranscriptLine {

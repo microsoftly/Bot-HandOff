@@ -63,7 +63,7 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
 
         const convo = this.internalGetConversationFromCustomerAddress(customerAddress);
 
-        return Promise.resolve(convo.connectCustomerToAgent(customerAddress, agentAddress));
+        return Promise.resolve(convo.connectCustomerToAgent(agentAddress));
     }
 
     public async disconnectCustomerFromAgent(customerAddress: IAddress): Promise<IConversation<T>> {
@@ -94,6 +94,10 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         const convo = this.internalGetConversationFromAgentAddress(agentAddress);
 
         return Promise.resolve(convo);
+    }
+
+    public async closeOpenConnections(): Promise<void> {
+        return Promise.resolve();
     }
 
     private internalGetConversationFromCustomerAddress(customerAddress: IAddress): InMemoryConversation<T> {

@@ -36,4 +36,7 @@ export interface IConversationProvider<T extends IAddress> {
     getConversationFromCustomerAddress(customerAddress: IAddress): Promise<IConversation<T>>;
 
     getConversationFromAgentAddress(agentAddress: T): Promise<IConversation<T>>;
+
+    //tslint:disable-next-line
+    closeOpenConnections(...any): Promise<any>;
 }

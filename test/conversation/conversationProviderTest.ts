@@ -3,6 +3,8 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 // tslint:disable-next-line: no-import-side-effect
 import 'mocha';
+import { Db, MongoClient } from 'mongodb';
+import { isNullOrUndefined } from 'util';
 import { ConversationState } from './../../src/conversation/ConversationState';
 import { IConversationProvider } from './../../src/conversation/IConversationProvider';
 import { ITranscriptLine } from './../../src/conversation/ITranscriptLine';
@@ -21,21 +23,39 @@ function expectTranscriptToContain(transcript: ITranscriptLine[], ...messages: (
         const actualMessage = transcript[i];
         const expectedMessage = messages[i];
 
+        if (isNullOrUndefined(actualMessage.from) && isNullOrUndefined((expectedMessage as ITranscriptLine).from)) {
+            actualMessage.from = null;
+            (expectedMessage as ITranscriptLine).from = null;
+        }
         expect(actualMessage).to.deep.include(expectedMessage);
     }
 }
 
 export function conversationProviderTest<T extends IAddress>(
-    getConversationProvider: () => Promise<InMemoryConversationProvider<T>>,
+    getConversationProvider: () => Promise<IConversationProvider<T>>,
     providerName: string
 ): void {
     describe(`Conversation provider ${providerName}`, () => {
-        let convoProvider: InMemoryConversationProvider<T>;
+        let convoProvider: IConversationProvider<T>;
+        let mongoClient: MongoClient;
 
         beforeEach(async () => {
+            mongoClient = await MongoClient.connect('mongodb://127.0.0.1:27017');
+
+            const  db = mongoClient.db('__test_handoff__');
+
+            try {
+                await db.dropCollection('conversations');
+            } catch (e) {}
+
             convoProvider = await getConversationProvider();
 
             await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message1);
+        });
+
+        afterEach(async () => {
+            await mongoClient.close(true);
+            await convoProvider.closeOpenConnections();
         });
 
         it('new customers can have their messages recorded', async () => {
