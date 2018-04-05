@@ -52,9 +52,11 @@ export class CustomerMessageRouter<T extends IAddress> implements IRouter {
                 if (this.agentService.listenForAgentMessages) {
                     this.agentService.listenForAgentMessages(agentConnectedConversation,
                         //tslint:disable-next-line
-                            (message: builder.IMessage) => {
-                                // await this.convoProvider.addAgentMessageToTranscript(message);
-                                this.bot.send(message);
+                            async (message: builder.IMessage) => {
+
+                                await this.convoProvider.addAgentMessageToTranscript(Object.assign({}, message, {address: agentAddress}));
+
+                                this.bot.send(Object.assign({}, message, {address: customerAddress}));
                             });
                 }
             } catch (e) {
@@ -76,7 +78,7 @@ export class CustomerMessageRouter<T extends IAddress> implements IRouter {
 
             const messageSentToAgent = await this.agentService.sendMessageToAgent(message);
 
-            await this.convoProvider.addAgentMessageToTranscript(messageSentToAgent);
+            // await this.convoProvider.addAgentMessageToTranscript(messageSentToAgent);
 
             // await this.liveAgentClient.chatActivityMonitoring.ChatMessage({text: session.message.text}, {
             //     liveAgentAffinity: agentAddress.liveAgentAffinity,

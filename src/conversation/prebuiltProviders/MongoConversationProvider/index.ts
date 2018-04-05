@@ -5,7 +5,7 @@ import { ConversationState } from './../../ConversationState';
 import { IConversationProvider } from './../../IConversationProvider';
 import { InMemoryConversation } from './../InMemoryConversationProvider/InMemoryConversation';
 
-export class MongoConversationProvider<T extends IAddress> implements IConversationProvider<T> {
+export class MongoConversationProvider<T> implements IConversationProvider<T> {
     private readonly collection: Collection<IConversation<T>>;
     private mongoClient: MongoClient;
 
@@ -44,9 +44,6 @@ export class MongoConversationProvider<T extends IAddress> implements IConversat
      * @param message message to be transcribed
      */
     public async addAgentMessageToTranscript(message: IMessage): Promise<IConversation<T>> {
-        const addressWithoutSequence = Object.assign({}, message.address);
-        //tslint:disable-next-line
-        delete (addressWithoutSequence as any).currentLongPollSequence;
         const storedConvo = await this.collection.findOne({agentAddress: message.address});
 
         const convo = InMemoryConversation.from(storedConvo);
@@ -102,7 +99,7 @@ export class MongoConversationProvider<T extends IAddress> implements IConversat
         return convo;
     }
 
-    public async connectCustomerToAgent(customerAddress: IAddress, agentAddress: T): Promise<IConversation<T>> {
+    public async connectCustomerToAgent(customerAddress: IAddress, agentAddress: IAddress): Promise<IConversation<T>> {
         const storedConvo = await this.collection.findOne({'customerAddress.conversation.id': customerAddress.conversation.id});
 
         const convo = InMemoryConversation.from(storedConvo);
@@ -128,7 +125,7 @@ export class MongoConversationProvider<T extends IAddress> implements IConversat
         return convo;
     }
 
-    public async disconnectAgentFromCustomer(agentAddress: T): Promise<IConversation<T>> {
+    public async disconnectAgentFromCustomer(agentAddress: IAddress): Promise<IConversation<T>> {
         const storedConvo = await this.collection.findOne({agentAddress});
 
         const convo = InMemoryConversation.from(storedConvo);
@@ -144,7 +141,7 @@ export class MongoConversationProvider<T extends IAddress> implements IConversat
         return await this.collection.findOne({'customerAddress.conversation.id': customerAddress.conversation.id});
     }
 
-    public async getConversationFromAgentAddress(agentAddress: T): Promise<IConversation<T>> {
+    public async getConversationFromAgentAddress(agentAddress: IAddress): Promise<IConversation<T>> {
         return await this.collection.findOne({agentAddress});
     }
 

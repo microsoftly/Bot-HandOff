@@ -21,7 +21,7 @@ export async function applyHandoff<T extends IAddress>(
         activeAgentConversations.forEach((convo: IConversation<T>) => agentService.listenForAgentMessages(convo,
             // tslint:disable
             async (message: IMessage) => {
-                await provider.addAgentMessageToTranscript(message);
+                await provider.addAgentMessageToTranscript(Object.assign({}, message, {address: convo.agentAddress}));
 
                 bot.send(message);
             }));

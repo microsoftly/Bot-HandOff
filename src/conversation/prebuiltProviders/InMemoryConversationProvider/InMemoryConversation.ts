@@ -5,7 +5,7 @@ import { ConversationState } from './../../ConversationState';
 import { IConversation } from './../../IConversation';
 
 //tslint:disable-next-line
-function updateLastModifiedTimestamp<T extends IAddress>(target: any, propertyKey: string, descriptor: PropertyDescriptor): void {
+function updateLastModifiedTimestamp<T>(target: any, propertyKey: string, descriptor: PropertyDescriptor): void {
     const originalFunction = descriptor.value;
 
     descriptor.value =  function(): InMemoryConversation<T> {
@@ -61,13 +61,14 @@ function requireConversationState<T extends IAddress>(...conversationStates: Con
     };
 }
 
-export class InMemoryConversation<T extends IAddress> implements IConversation<T> {
+export class InMemoryConversation<T> implements IConversation<T> {
     public readonly customerAddress: IAddress;
     public readonly createdAt: Date;
     public transcript: ITranscriptLine[];
     public conversationState: ConversationState;
-    public agentAddress?: T;
+    public agentAddress?: IAddress;
     public lastModified: Date;
+    public metadata: T;
 
     constructor(customerAddress: IAddress, createdAt?: Date) {
         this.customerAddress = customerAddress;
@@ -124,7 +125,7 @@ export class InMemoryConversation<T extends IAddress> implements IConversation<T
     }
 
     @updateLastModifiedTimestamp
-    public connectCustomerToAgent(agentAddress: T): InMemoryConversation<T> {
+    public connectCustomerToAgent(agentAddress: IAddress): InMemoryConversation<T> {
         this.conversationState = ConversationState.Agent;
         this.agentAddress = agentAddress;
 
@@ -142,7 +143,7 @@ export class InMemoryConversation<T extends IAddress> implements IConversation<T
     }
 
     // tslint:disable-next-line member-ordering
-    public static from<K extends IAddress>(otherConvo: IConversation<K>): InMemoryConversation<K> {
+    public static from<K>(otherConvo: IConversation<K>): InMemoryConversation<K> {
         const newConvo = new InMemoryConversation<K>(otherConvo.customerAddress, otherConvo.createdAt);
 
         newConvo.agentAddress = Object.assign({}, otherConvo.agentAddress);

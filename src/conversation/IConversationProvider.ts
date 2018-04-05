@@ -1,7 +1,7 @@
 import { IAddress, IMessage } from 'botbuilder';
 import { IConversation } from './IConversation';
 
-export interface IConversationProvider<T extends IAddress> {
+export interface IConversationProvider<T> {
     /**
      * transcribes a message for a customer
      *
@@ -27,15 +27,15 @@ export interface IConversationProvider<T extends IAddress> {
 
     dequeueCustomer(customerAddress: IAddress): Promise<IConversation<T>>;
 
-    connectCustomerToAgent(customerAddress: IAddress, agentAddress: T): Promise<IConversation<T>>;
+    connectCustomerToAgent(customerAddress: IAddress, agentAddress: IAddress): Promise<IConversation<T>>;
 
     disconnectCustomerFromAgent(customerAddress: IAddress): Promise<IConversation<T>>;
 
-    disconnectAgentFromCustomer(agentAddress: T): Promise<IConversation<T>>;
+    disconnectAgentFromCustomer(agentAddress: IAddress): Promise<IConversation<T>>;
 
     getConversationFromCustomerAddress(customerAddress: IAddress): Promise<IConversation<T>>;
 
-    getConversationFromAgentAddress(agentAddress: T): Promise<IConversation<T>>;
+    getConversationFromAgentAddress(agentAddress: IAddress): Promise<IConversation<T>>;
 
     //tslint:disable-next-line
     closeOpenConnections(...any): Promise<any>;

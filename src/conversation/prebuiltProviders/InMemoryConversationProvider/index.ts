@@ -3,7 +3,7 @@ import { IConversation } from '../../IConversation';
 import { IConversationProvider } from './../../IConversationProvider';
 import { InMemoryConversation } from './InMemoryConversation';
 
-export class InMemoryConversationProvider<T extends IAddress> implements IConversationProvider<T> {
+export class InMemoryConversationProvider<T> implements IConversationProvider<T> {
     private readonly conversations: Map<string, InMemoryConversation<T>>;
     private readonly agentToCustomerSerializedAddressMap: Map<string, string>;
 
@@ -31,7 +31,7 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     }
 
     public addAgentMessageToTranscript(message: IMessage): Promise<IConversation<T>> {
-        const customerConvo = this.internalGetConversationFromAgentAddress(message.address as T);
+        const customerConvo = this.internalGetConversationFromAgentAddress(message.address);
 
         if (!customerConvo) {
             throw new Error('could not find customer address for agent message');
@@ -58,7 +58,7 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         return Promise.resolve(convo.dequeueCustomer(customerAddress));
     }
 
-    public connectCustomerToAgent(customerAddress: IAddress, agentAddress: T): Promise<IConversation<T>> {
+    public connectCustomerToAgent(customerAddress: IAddress, agentAddress: IAddress): Promise<IConversation<T>> {
         this.mapAgentToCustomer(agentAddress, customerAddress);
 
         const convo = this.internalGetConversationFromCustomerAddress(customerAddress);
@@ -72,7 +72,7 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         return this.disconnectAgentFromCustomer(convo.agentAddress);
     }
 
-    public async disconnectAgentFromCustomer(agentAddress: T): Promise<IConversation<T>> {
+    public async disconnectAgentFromCustomer(agentAddress: IAddress): Promise<IConversation<T>> {
         const convo = this.internalGetConversationFromAgentAddress(agentAddress);
 
         if (!convo) {
@@ -90,7 +90,7 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         return Promise.resolve(this.conversations.get(serializedCustomerAddress));
     }
 
-    public async getConversationFromAgentAddress(agentAddress: T): Promise<IConversation<T>> {
+    public async getConversationFromAgentAddress(agentAddress: IAddress): Promise<IConversation<T>> {
         const convo = this.internalGetConversationFromAgentAddress(agentAddress);
 
         return Promise.resolve(convo);
@@ -125,7 +125,7 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         return convo;
     }
 
-    private internalGetConversationFromAgentAddress(agentAddress: T): InMemoryConversation<T> {
+    private internalGetConversationFromAgentAddress(agentAddress: IAddress): InMemoryConversation<T> {
         const serializedAgentAddress = this.serializeAddress(agentAddress);
 
         const serializedCustomerAddress = this.agentToCustomerSerializedAddressMap.get(serializedAgentAddress);
@@ -144,14 +144,14 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         return convo;
     }
 
-    private mapAgentToCustomer(agentAddress: T, customerAddress: IAddress): void {
+    private mapAgentToCustomer(agentAddress: IAddress, customerAddress: IAddress): void {
         const serializedAgentAddress = this.serializeAddress(agentAddress);
         const serializedCustomerAddress = this.serializeAddress(customerAddress);
 
         this.agentToCustomerSerializedAddressMap.set(serializedAgentAddress, serializedCustomerAddress);
     }
 
-    private unmapAgentFromCustomer(agentAddress: T): void {
+    private unmapAgentFromCustomer(agentAddress: IAddress): void {
         const serializedAgentAddress = this.serializeAddress(agentAddress);
 
         this.agentToCustomerSerializedAddressMap.delete(serializedAgentAddress);
