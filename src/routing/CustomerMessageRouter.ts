@@ -29,7 +29,15 @@ export class CustomerMessageRouter<T extends IAddress> implements IRouter {
 
         if (convo.conversationState === ConversationState.Bot) {
             if (session.message.text !== 'connect to agent') {
-                return session.send(`you said: ${session.message.text}`);
+                const message = new Message()
+                    .text(`you said: ${session.message.text}`)
+                    .address(session.message.address)
+                    .timestamp()
+                    .toMessage();
+
+                await this.convoProvider.addBotMessageToTranscript(message);
+
+                return session.send(message);
             }
 
             await this.convoProvider.enqueueCustomer(customerAddress);
@@ -39,7 +47,16 @@ export class CustomerMessageRouter<T extends IAddress> implements IRouter {
             try {
                 const agentAddress = await this.agentService.queueForAgent(session);
 
-                await this.convoProvider.connectCustomerToAgent(customerAddress, agentAddress);
+                const agentConnectedConversation = await this.convoProvider.connectCustomerToAgent(customerAddress, agentAddress);
+
+                if (this.agentService.listenForAgentMessages) {
+                    this.agentService.listenForAgentMessages(agentConnectedConversation,
+                        //tslint:disable-next-line
+                            (message: builder.IMessage) => {
+                                // await this.convoProvider.addAgentMessageToTranscript(message);
+                                this.bot.send(message);
+                            });
+                }
             } catch (e) {
                 session.send('sorry, there are no agents currently available to help');
 
@@ -54,9 +71,12 @@ export class CustomerMessageRouter<T extends IAddress> implements IRouter {
             const message = new Message()
                 .text(session.message.text)
                 .address(agentAddress)
+                .timestamp(new Date().toISOString())
                 .toMessage();
 
-            const res = await this.agentService.sendMessageToAgent(message);
+            const messageSentToAgent = await this.agentService.sendMessageToAgent(message);
+
+            await this.convoProvider.addAgentMessageToTranscript(messageSentToAgent);
 
             // await this.liveAgentClient.chatActivityMonitoring.ChatMessage({text: session.message.text}, {
             //     liveAgentAffinity: agentAddress.liveAgentAffinity,

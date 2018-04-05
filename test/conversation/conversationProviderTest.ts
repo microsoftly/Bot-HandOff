@@ -5,12 +5,12 @@ import * as chaiAsPromised from 'chai-as-promised';
 import 'mocha';
 import { Db, MongoClient } from 'mongodb';
 import { isNullOrUndefined } from 'util';
+import { IConversation } from '../../src/conversation/IConversation';
 import { ConversationState } from './../../src/conversation/ConversationState';
 import { IConversationProvider } from './../../src/conversation/IConversationProvider';
 import { ITranscriptLine } from './../../src/conversation/ITranscriptLine';
 import { InMemoryConversationProvider } from './../../src/conversation/prebuiltProviders/InMemoryConversationProvider/index';
 import * as TestData from './testDataProvider';
-
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
@@ -260,6 +260,27 @@ export function conversationProviderTest<T extends IAddress>(
                     expect.fail('An agent other than the connected agent recording a message did not throw an error');
                 } catch (e) {}
             });
+        });
+
+        it('can get all conversations currently active with an agent', async () => {
+            await convoProvider.enqueueCustomer(TestData.customer1.address);
+            await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+            await convoProvider.addCustomerMessageToTranscript(TestData.customer2.message1);
+
+            let connectedConversations = await convoProvider.getConversationsConnectedToAgent();
+
+            expect(connectedConversations.length).to.eq(1);
+            expect(connectedConversations[0].conversationState).to.eq(ConversationState.Agent);
+            expect(connectedConversations[0].customerAddress).to.deep.eq(TestData.customer1.address);
+
+            await convoProvider.enqueueCustomer(TestData.customer2.address);
+            await convoProvider.connectCustomerToAgent(TestData.customer2.address, TestData.agent1.convo2.address as T);
+
+            connectedConversations = await convoProvider.getConversationsConnectedToAgent();
+
+            expect(connectedConversations.length).to.eq(2);
+            connectedConversations.forEach((convo: IConversation<T>) => expect(convo.conversationState).to.eq(ConversationState.Agent));
+            expect(connectedConversations[0].customerAddress).to.not.deep.eq(connectedConversations[1].customerAddress);
         });
     });
 }

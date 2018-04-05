@@ -100,6 +100,18 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
         return Promise.resolve();
     }
 
+    public getConversationsConnectedToAgent(minTime?: Date): Promise<IConversation<T>[]> {
+        const serializedCustomerAddresses = Array.from(this.agentToCustomerSerializedAddressMap.values());
+
+        let activeConversations = serializedCustomerAddresses.map((customerAddress: string) => this.conversations.get(customerAddress));
+
+        if (minTime) {
+            activeConversations = activeConversations.filter((convo: IConversation<T>) => new Date(convo.lastModified) > minTime);
+        }
+
+        return Promise.resolve(activeConversations);
+    }
+
     private internalGetConversationFromCustomerAddress(customerAddress: IAddress): InMemoryConversation<T> {
         const serializedCustomerAddress = this.serializeAddress(customerAddress);
 
@@ -146,6 +158,6 @@ export class InMemoryConversationProvider<T extends IAddress> implements IConver
     }
 
     private serializeAddress(address: IAddress): string {
-        return address.user.id;
+        return address.conversation.id || address.user.id;
     }
 }

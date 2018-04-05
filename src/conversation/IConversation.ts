@@ -10,4 +10,6 @@ export interface IConversation<T extends IAddress> {
     // TODO add replication addresses
     conversationState: ConversationState;
     transcript: ITranscriptLine[];
+    lastModified: Date;
+    createdAt: Date;
 }

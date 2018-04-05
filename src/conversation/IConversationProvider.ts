@@ -39,4 +39,6 @@ export interface IConversationProvider<T extends IAddress> {
 
     //tslint:disable-next-line
     closeOpenConnections(...any): Promise<any>;
+
+    getConversationsConnectedToAgent(minTime?: Date): Promise<IConversation<T>[]>;
 }
