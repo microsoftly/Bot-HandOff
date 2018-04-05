@@ -267,3 +267,19 @@ export const customer2 = {
         response3: BOT_TO_CUSTOMER_2_MESSAGE_3
     }
 };
+
+export interface ITestMetadata {
+    field1: string;
+    field2: number;
+}
+
+//tslint:disable
+export const Metadata1: ITestMetadata = {
+    field1: 'metadata 1',
+    field2: 1
+};
+
+export const Metadata2: ITestMetadata = {
+    field1: 'metadata 2',
+    field2: 2
+};

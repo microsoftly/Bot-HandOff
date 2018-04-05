@@ -162,8 +162,42 @@ export class MongoConversationProvider<T> implements IConversationProvider<T> {
         return await this.collection.find<IConversation<T>>(query).toArray();
     }
 
+    public async upsertMetadataUsingCustomerAddress(customerAddress: IAddress, metadata: T): Promise<IConversation<T>> {
+        const query = {
+            $set: { metadata }
+        };
+
+        const storedConvo = await this.getConversationFromCustomerAddress(customerAddress);
+
+        const convo = InMemoryConversation.from(storedConvo);
+
+        convo.updateMetadata(metadata);
+
+        await this.collection.update({'customerAddress.conversation.id': customerAddress.conversation.id},
+                                     { $set: convo }, { upsert: true } );
+
+        return convo;
+    }
+
+    public async upsertMetadataUsingAgentAddress(agentAddress: IAddress, metadata: T): Promise<IConversation<T>> {
+        const query = {
+            $set: { metadata }
+        };
+
+        const storedConvo = await this.getConversationFromAgentAddress(agentAddress);
+
+        const convo = InMemoryConversation.from(storedConvo);
+
+        convo.updateMetadata(metadata);
+
+        await this.collection.update({'agentAddress.conversation.id': agentAddress.conversation.id},
+                                     { $set: convo }, { upsert: true } );
+
+        return convo;
+    }
+
     //tslint:disable-next-line member-ordering
-    public static async CreateNewMongoProvider<T extends IAddress>(
+    public static async CreateNewMongoProvider<T>(
         uri: string,
         dbName: string,
         collectionName: string,

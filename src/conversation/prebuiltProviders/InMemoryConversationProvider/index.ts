@@ -112,6 +112,18 @@ export class InMemoryConversationProvider<T> implements IConversationProvider<T>
         return Promise.resolve(activeConversations);
     }
 
+    public upsertMetadataUsingCustomerAddress(customerAddress: IAddress, metadata: T): Promise<IConversation<T>> {
+        const convo = this.internalGetConversationFromCustomerAddress(customerAddress);
+
+        return Promise.resolve(convo.updateMetadata(metadata));
+    }
+
+    public upsertMetadataUsingAgentAddress(agentAddress: IAddress, metadata: T): Promise<IConversation<T>> {
+        const convo = this.internalGetConversationFromAgentAddress(agentAddress);
+
+        return Promise.resolve(convo.updateMetadata(metadata));
+    }
+
     private internalGetConversationFromCustomerAddress(customerAddress: IAddress): InMemoryConversation<T> {
         const serializedCustomerAddress = this.serializeAddress(customerAddress);
 

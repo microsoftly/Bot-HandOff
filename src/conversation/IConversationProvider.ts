@@ -41,4 +41,8 @@ export interface IConversationProvider<T> {
     closeOpenConnections(...any): Promise<any>;
 
     getConversationsConnectedToAgent(minTime?: Date): Promise<IConversation<T>[]>;
+
+    upsertMetadataUsingCustomerAddress(customerAddress: IAddress, metadata: T): Promise<IConversation<T>>;
+
+    upsertMetadataUsingAgentAddress(agentAddress: IAddress, metadata: T): Promise<IConversation<T>>;
 }

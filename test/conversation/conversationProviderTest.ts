@@ -31,7 +31,7 @@ function expectTranscriptToContain(transcript: ITranscriptLine[], ...messages: (
     }
 }
 
-export function conversationProviderTest<T extends IAddress>(
+export function conversationProviderTest<T extends TestData.ITestMetadata>(
     getConversationProvider: () => Promise<IConversationProvider<T>>,
     providerName: string
 ): void {
@@ -111,7 +111,7 @@ export function conversationProviderTest<T extends IAddress>(
             // 1. when connected to agent
             it('throws an error when connected to an agent', async () => {
                 await convoProvider.enqueueCustomer(TestData.customer1.address);
-                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address );
 
                 try {
                     await convoProvider.enqueueCustomer(TestData.customer1.address);
@@ -155,7 +155,7 @@ export function conversationProviderTest<T extends IAddress>(
         describe('connect to agent', () => {
             it('updates conversation state to agent', async () => {
                 await convoProvider.enqueueCustomer(TestData.customer1.address);
-                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address );
 
                 const convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
 
@@ -167,7 +167,7 @@ export function conversationProviderTest<T extends IAddress>(
 
             it('throws an error when not in a queued state', async () => {
                 try {
-                    await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+                    await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address );
                     expect.fail('connect customer to agent should have thrown an error while in Bot state');
                 } catch (e) {}
             });
@@ -176,7 +176,7 @@ export function conversationProviderTest<T extends IAddress>(
         describe('disconnect from agent', () => {
             it('updates the conversation state to Bot', async () => {
                 await convoProvider.enqueueCustomer(TestData.customer1.address);
-                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address );
                 await convoProvider.disconnectCustomerFromAgent(TestData.customer1.address);
 
                 let convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
@@ -184,8 +184,8 @@ export function conversationProviderTest<T extends IAddress>(
                 expect(convo.conversationState).to.eq(ConversationState.Bot);
 
                 await convoProvider.enqueueCustomer(TestData.customer1.address);
-                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
-                await convoProvider.disconnectAgentFromCustomer(TestData.agent1.convo1.address as T);
+                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address );
+                await convoProvider.disconnectAgentFromCustomer(TestData.agent1.convo1.address );
 
                 convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
 
@@ -196,7 +196,7 @@ export function conversationProviderTest<T extends IAddress>(
 
             it('throws an exception when not connected to an agent', async () => {
                 try {
-                    await convoProvider.disconnectAgentFromCustomer(TestData.agent1.convo1.address as T);
+                    await convoProvider.disconnectAgentFromCustomer(TestData.agent1.convo1.address );
                     expect.fail('disconnect agent from customer did not throw an error');
                 } catch (e) {}
 
@@ -208,7 +208,7 @@ export function conversationProviderTest<T extends IAddress>(
                 await convoProvider.enqueueCustomer(TestData.customer1.address);
 
                 try {
-                    await convoProvider.disconnectAgentFromCustomer(TestData.agent1.convo1.address as T);
+                    await convoProvider.disconnectAgentFromCustomer(TestData.agent1.convo1.address );
                     expect.fail('disconnect agent from customer did not throw an error');
                 } catch (e) {}
 
@@ -222,7 +222,7 @@ export function conversationProviderTest<T extends IAddress>(
         describe('agent messages', () => {
             it('are recorded', async () => {
                 await convoProvider.enqueueCustomer(TestData.customer1.address);
-                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address );
                 await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message1);
                 await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message2);
                 await convoProvider.addCustomerMessageToTranscript(TestData.customer1.message2);
@@ -252,7 +252,7 @@ export function conversationProviderTest<T extends IAddress>(
 
             it('throws an error when a different than the connected agent sent a message', async () => {
                 await convoProvider.enqueueCustomer(TestData.customer1.address);
-                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+                await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address );
                 await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message1);
 
                 try {
@@ -264,7 +264,7 @@ export function conversationProviderTest<T extends IAddress>(
 
         it('can get all conversations currently active with an agent', async () => {
             await convoProvider.enqueueCustomer(TestData.customer1.address);
-            await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address as T);
+            await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address );
             await convoProvider.addCustomerMessageToTranscript(TestData.customer2.message1);
 
             let connectedConversations = await convoProvider.getConversationsConnectedToAgent();
@@ -274,13 +274,80 @@ export function conversationProviderTest<T extends IAddress>(
             expect(connectedConversations[0].customerAddress).to.deep.eq(TestData.customer1.address);
 
             await convoProvider.enqueueCustomer(TestData.customer2.address);
-            await convoProvider.connectCustomerToAgent(TestData.customer2.address, TestData.agent1.convo2.address as T);
+            await convoProvider.connectCustomerToAgent(TestData.customer2.address, TestData.agent1.convo2.address);
 
             connectedConversations = await convoProvider.getConversationsConnectedToAgent();
 
             expect(connectedConversations.length).to.eq(2);
             connectedConversations.forEach((convo: IConversation<T>) => expect(convo.conversationState).to.eq(ConversationState.Agent));
             expect(connectedConversations[0].customerAddress).to.not.deep.eq(connectedConversations[1].customerAddress);
+        });
+
+        it('generic metadata can be upserted using customer addres', async () => {
+            await convoProvider.upsertMetadataUsingCustomerAddress(TestData.customer1.address, TestData.Metadata1 as T);
+
+            let convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
+
+            let convoMetadata = convo.metadata;
+
+            //tslint:disable-next-line
+            expect(convoMetadata).not.to.be.undefined;
+            //tslint:disable-next-line
+            expect(convoMetadata).not.to.be.null;
+
+            expect(convoMetadata.field1).to.eq(TestData.Metadata1.field1);
+            expect(convoMetadata.field2).to.eq(TestData.Metadata1.field2);
+
+            // upserting new data
+
+            await convoProvider.upsertMetadataUsingCustomerAddress(TestData.customer1.address, TestData.Metadata2 as T);
+
+            convo = await convoProvider.getConversationFromCustomerAddress(TestData.customer1.address);
+
+            convoMetadata = convo.metadata;
+
+            //tslint:disable-next-line
+            expect(convoMetadata).not.to.be.undefined;
+            //tslint:disable-next-line
+            expect(convoMetadata).not.to.be.null;
+
+            expect(convoMetadata.field1).to.eq(TestData.Metadata2.field1);
+            expect(convoMetadata.field2).to.eq(TestData.Metadata2.field2);
+        });
+
+        it('generic metadata can be upserted using agent addres', async () => {
+            await convoProvider.enqueueCustomer(TestData.customer1.address);
+            await convoProvider.connectCustomerToAgent(TestData.customer1.address, TestData.agent1.convo1.address );
+            await convoProvider.addAgentMessageToTranscript(TestData.agent1.convo1.message1);
+            await convoProvider.upsertMetadataUsingAgentAddress(TestData.agent1.convo1.address, TestData.Metadata1 as T);
+
+            let convo = await convoProvider.getConversationFromAgentAddress(TestData.agent1.convo1.address);
+
+            let convoMetadata = convo.metadata;
+
+            //tslint:disable-next-line
+            expect(convoMetadata).not.to.be.undefined;
+            //tslint:disable-next-line
+            expect(convoMetadata).not.to.be.null;
+
+            expect(convoMetadata.field1).to.eq(TestData.Metadata1.field1);
+            expect(convoMetadata.field2).to.eq(TestData.Metadata1.field2);
+
+            // upserting new data
+
+            await convoProvider.upsertMetadataUsingAgentAddress(TestData.agent1.convo1.address, TestData.Metadata2 as T);
+
+            convo = await convoProvider.getConversationFromAgentAddress(TestData.agent1.convo1.address);
+
+            convoMetadata = convo.metadata;
+
+            //tslint:disable-next-line
+            expect(convoMetadata).not.to.be.undefined;
+            //tslint:disable-next-line
+            expect(convoMetadata).not.to.be.null;
+
+            expect(convoMetadata.field1).to.eq(TestData.Metadata2.field1);
+            expect(convoMetadata.field2).to.eq(TestData.Metadata2.field2);
         });
     });
 }

@@ -142,6 +142,13 @@ export class InMemoryConversation<T> implements IConversation<T> {
         return this;
     }
 
+    @updateLastModifiedTimestamp
+    public updateMetadata(metadata: T): InMemoryConversation<T> {
+        this.metadata = metadata;
+
+        return this;
+    }
+
     // tslint:disable-next-line member-ordering
     public static from<K>(otherConvo: IConversation<K>): InMemoryConversation<K> {
         const newConvo = new InMemoryConversation<K>(otherConvo.customerAddress, otherConvo.createdAt);

@@ -12,5 +12,5 @@ export interface IConversation<T> {
     transcript: ITranscriptLine[];
     lastModified: Date;
     createdAt: Date;
-    metadata: T;
+    metadata?: T;
 }

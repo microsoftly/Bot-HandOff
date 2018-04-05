@@ -5,12 +5,13 @@ import { MongoClient } from 'mongodb';
 import { InMemoryConversationProvider } from './../../src/conversation/prebuiltProviders/InMemoryConversationProvider/index';
 import { MongoConversationProvider } from './../../src/conversation/prebuiltProviders/MongoConversationProvider/index';
 import { conversationProviderTest } from './conversationProviderTest';
+import { ITestMetadata } from './testDataProvider';
 
 conversationProviderTest(
-    () => Promise.resolve(new InMemoryConversationProvider()), 'InMemoryConversationProvider');
+    () => Promise.resolve(new InMemoryConversationProvider<ITestMetadata>()), 'InMemoryConversationProvider');
 
 conversationProviderTest(
     async () =>
-        await MongoConversationProvider.CreateNewMongoProvider<IAddress>('mongodb://127.0.0.1:27017', '__test_handoff__', 'conversations'),
+        await MongoConversationProvider.CreateNewMongoProvider<ITestMetadata>('mongodb://127.0.0.1:27017', '__test_handoff__', 'conversations'),
     'Mongo provider'
 );
