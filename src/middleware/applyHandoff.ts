@@ -5,7 +5,7 @@ import { IConversationProvider } from './../conversation/IConversationProvider';
 import { IncomingMessageRouter } from './../routing/IncomingMessageRouter';
 import { IAgentService } from './../services/IAgentService';
 
-export async function applyHandoff<T extends IAddress>(
+export async function applyHandoff<T>(
     bot: UniversalBot,
     provider: IConversationProvider<T> = new InMemoryConversationProvider(),
     //tslint:disable-next-line
@@ -16,15 +16,16 @@ export async function applyHandoff<T extends IAddress>(
     if (agentService.listenForAgentMessages) {
         const activeAgentConversations = await provider.getConversationsConnectedToAgent();
 
+        //tslint:disable-next-line
         activeAgentConversations.length && console.log('reconnecteing to disconnected conversations');
 
-        activeAgentConversations.forEach((convo: IConversation<T>) => agentService.listenForAgentMessages(convo,
-            // tslint:disable
-            async (message: IMessage) => {
-                await provider.addAgentMessageToTranscript(Object.assign({}, message, {address: convo.agentAddress}));
+        activeAgentConversations.forEach((convo: IConversation<T>) => agentService.listenForAgentMessages( convo.agentAddress,
+        //tslint:disable-next-line
+            async (messageFromAgent: IMessage) => {
+                await provider.addAgentMessageToTranscript(messageFromAgent);
 
-                bot.send(message);
-            }));
+                bot.send(Object.assign({}, messageFromAgent, {address: convo.customerAddress}));
+            },                                                                                             convo.metadata));
     }
 
     bot.use({
@@ -35,12 +36,6 @@ export async function applyHandoff<T extends IAddress>(
         await provider.closeOpenConnections();
     }
 
-    process.on('exit', async () => await exitHandler());
-
-    //catches ctrl+c event
-    process.on('SIGINT', async () => await exitHandler());
-
-    process.on('SIGUSR1', async () => await exitHandler());
-    process.on('SIGUSR2', async () => await exitHandler());
-
+    // //catches ctrl+c event
+    process.on('SIGINT', async () => exitHandler());
 }

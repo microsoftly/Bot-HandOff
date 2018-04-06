@@ -11,6 +11,7 @@ export class MongoConversationProvider<T> implements IConversationProvider<T> {
 
     private constructor(client: MongoClient, dbName: string, collectionName: string) {
         const db = client.db(dbName);
+
         this.mongoClient = client;
         this.collection = db.collection(collectionName);
     }
@@ -146,7 +147,13 @@ export class MongoConversationProvider<T> implements IConversationProvider<T> {
     }
 
     public async closeOpenConnections(): Promise<void> {
-        await this.mongoClient.close(true);
+        try {
+            await this.mongoClient.close(true);
+        } catch (e) {
+            console.error(e);
+        }
+
+        // return Promise.resolve();
     }
 
     public async getConversationsConnectedToAgent(minTime?: Date): Promise<IConversation<T>[]> {

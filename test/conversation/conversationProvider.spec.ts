@@ -12,6 +12,7 @@ conversationProviderTest(
 
 conversationProviderTest(
     async () =>
+    //tslint:disable-next-line
         await MongoConversationProvider.CreateNewMongoProvider<ITestMetadata>('mongodb://127.0.0.1:27017', '__test_handoff__', 'conversations'),
     'Mongo provider'
 );

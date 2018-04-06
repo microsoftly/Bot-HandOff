@@ -2,7 +2,7 @@ import { IAddress, Session, UniversalBot } from 'botbuilder';
 import { IConversationProvider } from './../conversation/IConversationProvider';
 import { IRouter } from './IRouter';
 
-export class AgentMessageRouter<T extends IAddress> implements IRouter {
+export class AgentMessageRouter<T> implements IRouter {
     private readonly bot: UniversalBot;
     private readonly convoProvider: IConversationProvider<T>;
 
@@ -13,7 +13,7 @@ export class AgentMessageRouter<T extends IAddress> implements IRouter {
 
     //tslint:disable-next-line
     public async route(session: Session): Promise<any> {
-        const agentAddress = session.message.address as T;
+        const agentAddress = session.message.address;
         const convo = await this.convoProvider.getConversationFromAgentAddress(agentAddress);
 
         const customerMessage = Object.assign({}, session.message, { address: convo.customerAddress });

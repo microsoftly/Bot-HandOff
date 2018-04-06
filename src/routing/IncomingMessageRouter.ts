@@ -5,7 +5,7 @@ import { AgentMessageRouter } from './AgentMessageRouter';
 import { CustomerMessageRouter } from './CustomerMessageRouter';
 import { IRouter } from './IRouter';
 
-export class IncomingMessageRouter<T extends IAddress> implements IRouter {
+export class IncomingMessageRouter<T> implements IRouter {
     private readonly bot: UniversalBot;
     private readonly agentMessageRouter: AgentMessageRouter<T>;
     private readonly customerMessageRouter: CustomerMessageRouter<T>;

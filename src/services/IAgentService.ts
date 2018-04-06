@@ -1,16 +1,21 @@
 import { IAddress, IMessage, Session } from 'botbuilder';
 import { IConversation } from './../conversation/IConversation';
 
-export interface IAgentService<T extends IAddress> {
+export interface IAgentAddressAndMetadata<T> {
+    agentAddress: IAddress;
+    metadata?: T;
+}
+
+export interface IAgentService<T> {
     idleDisconnectTimeMs?: number;
 
     //tslint:disable-next-line
-    queueForAgent(session: Session): Promise<T>;
+    queueForAgent(customerAddress: IAddress): Promise<IAgentAddressAndMetadata<T>>;
     //tslint:disable-next-line
-    sendMessageToAgent(message: IMessage): Promise<IMessage>; 
+    sendMessageToAgent(message: IMessage, metadata?: T): Promise<T | void>; 
 
     getAgentChannelId(): string;
 
     //tslint:disable-next-line
-    listenForAgentMessages?(conversation: IConversation<T>, onMessageReceived: (message: IMessage) => any): any;
+    listenForAgentMessages?(agentAddress: IAddress, onMessageReceived: (messageFromAgent: IMessage) => any, metadata?: T): any;
 }

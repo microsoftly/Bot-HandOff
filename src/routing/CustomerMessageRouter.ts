@@ -6,7 +6,7 @@ import { IAgentService } from './../services/IAgentService';
 import { IRouter } from './IRouter';
 
 // let liveAgentSeq = 1;
-export class CustomerMessageRouter<T extends IAddress> implements IRouter {
+export class CustomerMessageRouter<T> implements IRouter {
     private readonly bot: UniversalBot;
     private readonly convoProvider: IConversationProvider<T>;
     private readonly agentService: IAgentService<T>;
@@ -45,20 +45,27 @@ export class CustomerMessageRouter<T extends IAddress> implements IRouter {
             session.send('please hold while we check with our agents');
 
             try {
-                const agentAddress = await this.agentService.queueForAgent(session);
+                const { agentAddress, metadata } = await this.agentService.queueForAgent(session.message.address);
 
                 const agentConnectedConversation = await this.convoProvider.connectCustomerToAgent(customerAddress, agentAddress);
 
-                if (this.agentService.listenForAgentMessages) {
-                    this.agentService.listenForAgentMessages(agentConnectedConversation,
-                        //tslint:disable-next-line
-                            async (message: builder.IMessage) => {
-
-                                await this.convoProvider.addAgentMessageToTranscript(Object.assign({}, message, {address: agentAddress}));
-
-                                this.bot.send(Object.assign({}, message, {address: customerAddress}));
-                            });
+                if (metadata) {
+                    await this.convoProvider.upsertMetadataUsingCustomerAddress(customerAddress, metadata);
                 }
+
+                if (!this.agentService.listenForAgentMessages) {
+                    return;
+                }
+
+                await this.agentService.listenForAgentMessages(agentAddress,
+                    //tslint:disable-next-line
+                        async (messageFromAgent: builder.IMessage) => {
+                            await this.convoProvider.addAgentMessageToTranscript(messageFromAgent);
+
+                            this.bot.send(Object.assign({}, messageFromAgent, {address: customerAddress}));
+                            //tslint:disable-next-line
+                        }, metadata);
+
             } catch (e) {
                 session.send('sorry, there are no agents currently available to help');
 
@@ -68,7 +75,7 @@ export class CustomerMessageRouter<T extends IAddress> implements IRouter {
             return session.send('please hold while we connect you to the next available agent');
         } else {
             //tslint:disable-next-line
-            const agentAddress = (convo.agentAddress as any) as T;
+            const agentAddress = convo.agentAddress;
 
             const message = new Message()
                 .text(session.message.text)
@@ -76,7 +83,17 @@ export class CustomerMessageRouter<T extends IAddress> implements IRouter {
                 .timestamp(new Date().toISOString())
                 .toMessage();
 
-            const messageSentToAgent = await this.agentService.sendMessageToAgent(message);
+            try {
+                const metadata = await this.agentService.sendMessageToAgent(message, convo.metadata);
+
+                if (metadata) {
+                    await this.convoProvider.upsertMetadataUsingCustomerAddress(convo.customerAddress, metadata);
+                }
+            } catch (e) {
+                console.error(e);
+
+                session.send('sorry, we\'re having trouble delivering your message');
+            }
 
             // await this.convoProvider.addAgentMessageToTranscript(messageSentToAgent);
 
